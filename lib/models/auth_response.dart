@@ -16,13 +16,20 @@ class AuthResponse {
   });
   
   factory AuthResponse.fromJson(Map<String, dynamic> json) {
-    return AuthResponse(
-      user: UserModel.fromJson(json['user']),
-      accessToken: json['access_token'],
-      refreshToken: json['refresh_token'],
-      tokenType: json['token_type'] ?? 'Bearer',
-      expiresIn: json['expires_in'],
-    );
+    try {
+      return AuthResponse(
+        user: UserModel.fromJson(json['user'] as Map<String, dynamic>),
+        accessToken: (json['access_token'] as String?) ?? '',
+        refreshToken: (json['refresh_token'] as String?) ?? '',
+        tokenType: (json['token_type'] as String?) ?? 'Bearer',
+        expiresIn: (json['expires_in'] as int?) ?? 0,
+      );
+    } catch (e) {
+      // Add detailed error logging
+      print('❌ AuthResponse.fromJson Error: $e');
+      print('📦 JSON data: $json');
+      rethrow;
+    }
   }
   
   Map<String, dynamic> toJson() {

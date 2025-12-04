@@ -14,8 +14,8 @@ class UserModel {
   final bool emailVerified;
   final DateTime? emailVerifiedAt;
   final DateTime? lastLoginAt;
-  final DateTime createdAt;
-  final DateTime updatedAt;
+  final DateTime? createdAt;  // ✅ Changed to nullable
+  final DateTime? updatedAt;  // ✅ Changed to nullable
   final List<String>? roles;
   final List<String>? permissions;
   
@@ -35,37 +35,63 @@ class UserModel {
     this.emailVerified = false,
     this.emailVerifiedAt,
     this.lastLoginAt,
-    required this.createdAt,
-    required this.updatedAt,
+    this.createdAt,  // ✅ Now optional
+    this.updatedAt,  // ✅ Now optional
     this.roles,
     this.permissions,
   });
   
   factory UserModel.fromJson(Map<String, dynamic> json) {
+    // Helper function to safely parse boolean from any value
+    bool parseBool(dynamic value) {
+      if (value == null) return false;
+      if (value is bool) return value;
+      if (value is String) return value.toLowerCase() == 'true';
+      if (value is int) return value == 1;
+      return false;
+    }
+    
+    // Helper function to safely parse DateTime
+    DateTime? parseDateTime(dynamic value) {
+      if (value == null) return null;
+      if (value is String) {
+        try {
+          return DateTime.parse(value);
+        } catch (e) {
+          return null;
+        }
+      }
+      return null;
+    }
+    
     return UserModel(
-      id: json['id'],
-      name: json['name'],
-      email: json['email'],
-      phone: json['phone'],
-      userType: json['user_type'] ?? 'user',
-      profilePicture: json['profile_picture'],
-      bio: json['bio'],
-      city: json['city'],
-      latitude: json['latitude'] != null ? double.tryParse(json['latitude'].toString()) : null,
-      longitude: json['longitude'] != null ? double.tryParse(json['longitude'].toString()) : null,
-      isDriver: json['is_driver'] ?? false,
-      driverVerified: json['driver_verified'] ?? false,
-      emailVerified: json['email_verified'] ?? false,
-      emailVerifiedAt: json['email_verified_at'] != null 
-          ? DateTime.parse(json['email_verified_at']) 
+      id: json['id'] as int,
+      name: json['name'] as String,
+      email: json['email'] as String,
+      phone: json['phone'] as String?,
+      userType: json['user_type'] as String? ?? 'user',
+      profilePicture: json['profile_picture'] as String?,
+      bio: json['bio'] as String?,
+      city: json['city'] as String?,
+      latitude: json['latitude'] != null 
+          ? double.tryParse(json['latitude'].toString()) 
           : null,
-      lastLoginAt: json['last_login_at'] != null 
-          ? DateTime.parse(json['last_login_at']) 
+      longitude: json['longitude'] != null 
+          ? double.tryParse(json['longitude'].toString()) 
           : null,
-      createdAt: DateTime.parse(json['created_at']),
-      updatedAt: DateTime.parse(json['updated_at']),
-      roles: json['roles'] != null ? List<String>.from(json['roles']) : null,
-      permissions: json['permissions'] != null ? List<String>.from(json['permissions']) : null,
+      isDriver: parseBool(json['is_driver']),
+      driverVerified: parseBool(json['driver_verified']),
+      emailVerified: parseBool(json['email_verified']),
+      emailVerifiedAt: parseDateTime(json['email_verified_at']),
+      lastLoginAt: parseDateTime(json['last_login_at']),
+      createdAt: parseDateTime(json['created_at']),  // ✅ Now uses parseDateTime
+      updatedAt: parseDateTime(json['updated_at']),  // ✅ Now uses parseDateTime
+      roles: json['roles'] != null 
+          ? List<String>.from(json['roles'] as List) 
+          : null,
+      permissions: json['permissions'] != null 
+          ? List<String>.from(json['permissions'] as List) 
+          : null,
     );
   }
   
@@ -86,8 +112,8 @@ class UserModel {
       'email_verified': emailVerified,
       'email_verified_at': emailVerifiedAt?.toIso8601String(),
       'last_login_at': lastLoginAt?.toIso8601String(),
-      'created_at': createdAt.toIso8601String(),
-      'updated_at': updatedAt.toIso8601String(),
+      'created_at': createdAt?.toIso8601String(),
+      'updated_at': updatedAt?.toIso8601String(),
       'roles': roles,
       'permissions': permissions,
     };

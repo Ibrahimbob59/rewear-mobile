@@ -70,7 +70,7 @@ class ProfileScreen extends StatelessWidget {
                     const Divider(),
                     _buildInfoRow(
                       'Member Since',
-                      user != null ? Helpers.formatDate(user.createdAt) : '-',
+                      user?.createdAt != null ? Helpers.formatDate(user!.createdAt!) : '-',
                     ),
                   ],
                 ),
