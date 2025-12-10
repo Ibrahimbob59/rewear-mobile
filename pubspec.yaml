@@ -9,6 +9,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  
 
   # UI & Icons
   cupertino_icons: ^1.0.6
@@ -44,7 +45,7 @@ dependencies:
 
   # Forms & Validation
   flutter_form_builder: ^9.1.1
-  form_builder_validators: ^9.1.0
+  form_builder_validators: ^11.2.0
 
   # Maps & Location
   google_maps_flutter: ^2.5.0
@@ -52,7 +53,7 @@ dependencies:
   geocoding: ^2.1.1
 
   # Utilities
-  intl: ^0.18.1
+  intl: ^0.19.0
   timeago: ^3.6.0
   url_launcher: ^6.2.2
   share_plus: ^7.2.1
