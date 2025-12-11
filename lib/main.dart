@@ -36,8 +36,8 @@ void main() async {
   ));
 
   // Initialize all services
-  final storageService = StorageService(storage);
-  final apiService = ApiService(dio, storageService);
+  final storageService = StorageService();
+  final apiService = ApiService();
   
   // Initialize feature services
   final itemsService = ItemsService(dio);
@@ -51,7 +51,7 @@ void main() async {
       providers: [
         // Auth Provider (from Week 1-2)
         ChangeNotifierProvider(
-          create: (_) => AuthProvider(apiService, storageService),
+          create: (_) => AuthProvider(),
         ),
         
         // Items Provider
