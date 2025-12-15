@@ -24,6 +24,7 @@ class DriverProvider with ChangeNotifier {
   bool get isPending => _driver?.isPending ?? false;
   bool get isApproved => _driver?.isApproved ?? false;
   bool get isAvailable => _driver?.isAvailable ?? false;
+  bool get isRejected => _driver?.isRejected ?? false;
 
   // Apply as driver
   Future<bool> applyAsDriver({
