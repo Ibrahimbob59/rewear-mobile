@@ -1,175 +1,174 @@
-import 'dart:io';
 import 'package:dio/dio.dart';
+import 'dart:io';
 import '../models/item_model.dart';
+import 'api_service.dart';
 
 class ItemsService {
-  final Dio _dio;
+  final Dio _dio = ApiService().dio;
 
-  ItemsService(this._dio);
+  ItemsService(Dio dio);
 
-  // Get all items with filters
-  Future<List<Item>> getItems({
+  // Browse items (PUBLIC - No auth required)
+  Future<Map<String, dynamic>> getItems({
     String? search,
     String? category,
-    double? minPrice,
-    double? maxPrice,
     String? size,
     String? condition,
     String? gender,
     bool? isDonation,
-    double? userLat,
-    double? userLng,
-    double? radiusKm,
-    String? sortBy, // newest, price_asc, price_desc, nearest
+    double? minPrice,
+    double? maxPrice,
+    String? sortBy,
     int page = 1,
-    int perPage = 20,
+    int perPage = 15,
   }) async {
     try {
       final queryParams = <String, dynamic>{
-        if (search != null) 'search': search,
+        'page': page,
+        'per_page': perPage,
+        if (search != null && search.isNotEmpty) 'search': search,
         if (category != null) 'category': category,
-        if (minPrice != null) 'min_price': minPrice,
-        if (maxPrice != null) 'max_price': maxPrice,
         if (size != null) 'size': size,
         if (condition != null) 'condition': condition,
         if (gender != null) 'gender': gender,
         if (isDonation != null) 'is_donation': isDonation,
-        if (userLat != null) 'user_lat': userLat,
-        if (userLng != null) 'user_lng': userLng,
-        if (radiusKm != null) 'radius_km': radiusKm,
+        if (minPrice != null) 'min_price': minPrice,
+        if (maxPrice != null) 'max_price': maxPrice,
         if (sortBy != null) 'sort_by': sortBy,
-        'page': page,
-        'per_page': perPage,
       };
+
+      print('🔍 Fetching items: $queryParams');
 
       final response = await _dio.get('/items', queryParameters: queryParams);
 
-      final List<dynamic> data = response.data['data'] as List<dynamic>;
-      return data.map((json) => Item.fromJson(json as Map<String, dynamic>)).toList();
-    } catch (e) {
-      throw Exception('Failed to fetch items: $e');
+      print('✅ Response received: ${response.statusCode}');
+      print('📦 Data structure: ${response.data.runtimeType}');
+
+      // Backend returns: { "success": true, "message": "...", "data": { "items": [...] }, "meta": {...} }
+      final data = response.data['data'];
+      final items = (data['items'] as List)
+          .map((json) => Item.fromJson(json))
+          .toList();
+
+      return {
+        'items': items,
+        'meta': response.data['meta'] ?? {},
+      };
+    } catch (e, stackTrace) {
+      print('❌ Error fetching items: $e');
+      print('Stack: $stackTrace');
+      rethrow;
     }
   }
 
-  // Get single item by ID
+  // Get single item (PUBLIC)
   Future<Item> getItem(int id) async {
     try {
       final response = await _dio.get('/items/$id');
-      return Item.fromJson(response.data['data'] as Map<String, dynamic>);
+      return Item.fromJson(response.data['data']);
     } catch (e) {
-      throw Exception('Failed to fetch item: $e');
+      print('❌ Error fetching item $id: $e');
+      rethrow;
     }
   }
 
-  // Create new item (with images)
+  // Create item (AUTH REQUIRED)
   Future<Item> createItem({
     required String title,
     required String description,
     required String category,
     required String size,
     required String condition,
+    required bool isDonation,
+    required List<File> images,
     String? gender,
     String? brand,
     String? color,
     double? price,
-    required bool isDonation,
-    required List<File> images,
   }) async {
     try {
-      // Create multipart form data
       final formData = FormData.fromMap({
         'title': title,
         'description': description,
         'category': category,
         'size': size,
         'condition': condition,
+        'is_donation': isDonation,
         if (gender != null) 'gender': gender,
         if (brand != null) 'brand': brand,
         if (color != null) 'color': color,
         if (price != null) 'price': price,
-        'is_donation': isDonation,
       });
 
-      // Add images
-      for (int i = 0; i < images.length; i++) {
-        formData.files.add(
-          MapEntry(
-            'images[$i]',
-            await MultipartFile.fromFile(
-              images[i].path,
-              filename: 'image_$i.jpg',
-            ),
-          ),
-        );
+      for (var image in images) {
+        formData.files.add(MapEntry(
+          'images[]',
+          await MultipartFile.fromFile(image.path),
+        ));
       }
 
       final response = await _dio.post('/items', data: formData);
-      return Item.fromJson(response.data['data'] as Map<String, dynamic>);
+      return Item.fromJson(response.data['data']);
     } catch (e) {
-      throw Exception('Failed to create item: $e');
+      print('❌ Error creating item: $e');
+      rethrow;
     }
   }
 
-  // Update item
+  // Update item (AUTH REQUIRED)
   Future<Item> updateItem({
     required int id,
     String? title,
     String? description,
-    String? category,
-    String? size,
-    String? condition,
-    String? gender,
-    String? brand,
-    String? color,
     double? price,
+    String? condition,
   }) async {
     try {
-      final data = <String, dynamic>{
-        if (title != null) 'title': title,
-        if (description != null) 'description': description,
-        if (category != null) 'category': category,
-        if (size != null) 'size': size,
-        if (condition != null) 'condition': condition,
-        if (gender != null) 'gender': gender,
-        if (brand != null) 'brand': brand,
-        if (color != null) 'color': color,
-        if (price != null) 'price': price,
-      };
+      final data = <String, dynamic>{};
+      if (title != null) data['title'] = title;
+      if (description != null) data['description'] = description;
+      if (price != null) data['price'] = price;
+      if (condition != null) data['condition'] = condition;
 
       final response = await _dio.put('/items/$id', data: data);
-      return Item.fromJson(response.data['data'] as Map<String, dynamic>);
+      return Item.fromJson(response.data['data']);
     } catch (e) {
-      throw Exception('Failed to update item: $e');
+      print('❌ Error updating item: $e');
+      rethrow;
     }
   }
 
-  // Delete item
+  // Delete item (AUTH REQUIRED)
   Future<void> deleteItem(int id) async {
     try {
       await _dio.delete('/items/$id');
     } catch (e) {
-      throw Exception('Failed to delete item: $e');
+      print('❌ Error deleting item: $e');
+      rethrow;
     }
   }
 
-  // Get user's own listings
+  // Get my listings (AUTH REQUIRED)
   Future<List<Item>> getMyListings() async {
     try {
       final response = await _dio.get('/items/my-listings');
-      final List<dynamic> data = response.data['data'] as List<dynamic>;
-      return data.map((json) => Item.fromJson(json as Map<String, dynamic>)).toList();
+      return (response.data['data'] as List)
+          .map((json) => Item.fromJson(json))
+          .toList();
     } catch (e) {
-      throw Exception('Failed to fetch my listings: $e');
+      print('❌ Error fetching my listings: $e');
+      rethrow;
     }
   }
 
-  // Toggle item status (available/unavailable)
+  // Toggle status (AUTH REQUIRED)
   Future<Item> toggleItemStatus(int id) async {
     try {
       final response = await _dio.post('/items/$id/toggle-status');
-      return Item.fromJson(response.data['data'] as Map<String, dynamic>);
+      return Item.fromJson(response.data['data']);
     } catch (e) {
-      throw Exception('Failed to toggle item status: $e');
+      print('❌ Error toggling status: $e');
+      rethrow;
     }
   }
 }
