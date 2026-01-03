@@ -156,7 +156,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                   const SizedBox(height: 20),
                   
                   // Icon
-                  Icon(
+                  const Icon(
                     Icons.mail_outline,
                     size: 80,
                     color: AppTheme.primaryColor,

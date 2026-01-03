@@ -105,7 +105,7 @@ class ProfileScreen extends StatelessWidget {
         children: [
           Text(
             label,
-            style: TextStyle(
+            style: const TextStyle(
               color: AppTheme.textSecondary,
               fontSize: 14,
             ),

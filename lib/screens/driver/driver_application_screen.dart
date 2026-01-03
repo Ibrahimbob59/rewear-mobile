@@ -1,9 +1,8 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:go_router/go_router.dart';
-import '../../providers/driver_provider.dart';
-import '../../services/image_upload_service.dart';
+import 'dart:io';
+import '../../widgets/common/custom_button.dart';
 
 class DriverApplicationScreen extends StatefulWidget {
   const DriverApplicationScreen({super.key});
@@ -14,381 +13,347 @@ class DriverApplicationScreen extends StatefulWidget {
 
 class _DriverApplicationScreenState extends State<DriverApplicationScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _imageUploadService = ImageUploadService();
-  
-  final _vehicleTypeController = TextEditingController();
-  final _vehicleNumberController = TextEditingController();
+  final _vehiclePlateController = TextEditingController();
   final _licenseNumberController = TextEditingController();
   
-  File? _licenseImage;
-  File? _vehicleImage;
-  bool _isLoading = false;
+  String _vehicleType = 'car';
+  DateTime? _licenseExpiryDate;
   
-  String? _selectedVehicleType;
-  final List<String> _vehicleTypes = ['Car', 'Motorcycle', 'Bicycle', 'Van'];
+  File? _idCardFront;
+  File? _idCardBack;
+  File? _driverLicense;
+  File? _vehicleRegistration;
+  
+  bool _isSubmitting = false;
 
   @override
   void dispose() {
-    _vehicleTypeController.dispose();
-    _vehicleNumberController.dispose();
+    _vehiclePlateController.dispose();
     _licenseNumberController.dispose();
     super.dispose();
   }
 
-  Future<void> _pickLicenseImage() async {
-    try {
-      final image = await _imageUploadService.pickImage();
-      if (image != null) {
-        setState(() {
-          _licenseImage = image;
-        });
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error picking image: $e')),
-      );
+  Future<void> _pickImage(String type) async {
+    final picker = ImagePicker();
+    final XFile? image = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 80,
+    );
+
+    if (image != null) {
+      setState(() {
+        switch (type) {
+          case 'id_front':
+            _idCardFront = File(image.path);
+            break;
+          case 'id_back':
+            _idCardBack = File(image.path);
+            break;
+          case 'license':
+            _driverLicense = File(image.path);
+            break;
+          case 'vehicle':
+            _vehicleRegistration = File(image.path);
+            break;
+        }
+      });
     }
   }
 
-  Future<void> _pickVehicleImage() async {
-    try {
-      final image = await _imageUploadService.pickImage();
-      if (image != null) {
-        setState(() {
-          _vehicleImage = image;
-        });
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error picking image: $e')),
-      );
+  Future<void> _selectDate() async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now().add(const Duration(days: 365)),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 3650)),
+    );
+
+    if (picked != null) {
+      setState(() {
+        _licenseExpiryDate = picked;
+      });
     }
   }
 
   Future<void> _submitApplication() async {
     if (!_formKey.currentState!.validate()) return;
 
-    if (_licenseImage == null) {
+    if (_idCardFront == null || _idCardBack == null || 
+        _driverLicense == null || _vehicleRegistration == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please upload your license photo')),
-      );
-      return;
-    }
-
-    if (_vehicleImage == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please upload your vehicle photo')),
-      );
-      return;
-    }
-
-    setState(() {
-      _isLoading = true;
-    });
-
-    final success = await context.read<DriverProvider>().applyAsDriver(
-      vehicleType: _selectedVehicleType!,
-      vehicleNumber: _vehicleNumberController.text.trim(),
-      licenseNumber: _licenseNumberController.text.trim(),
-      licenseImage: _licenseImage!,
-      vehicleImage: _vehicleImage!,
-    );
-
-    setState(() {
-      _isLoading = false;
-    });
-
-    if (!mounted) return;
-
-    if (success) {
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => AlertDialog(
-          icon: const Icon(Icons.check_circle, color: Colors.green, size: 60),
-          title: const Text('Application Submitted!'),
-          content: const Text(
-            'Your driver application has been submitted successfully. '
-            'We will review it and get back to you soon.',
-          ),
-          actions: [
-            ElevatedButton(
-              onPressed: () {
-                context.go('/');
-              },
-              child: const Text('Go Home'),
-            ),
-          ],
-        ),
-      );
-    } else {
-      final error = context.read<DriverProvider>().error;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(error ?? 'Failed to submit application'),
+        const SnackBar(
+          content: Text('Please upload all required images'),
           backgroundColor: Colors.red,
         ),
       );
+      return;
     }
+
+    if (_licenseExpiryDate == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select license expiry date'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isSubmitting = true);
+
+    // TODO: Implement actual API call when backend is ready
+    await Future.delayed(const Duration(seconds: 2));
+
+    setState(() => _isSubmitting = false);
+
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Application submitted! Admin will review within 48 hours.'),
+        backgroundColor: Colors.green,
+        duration: Duration(seconds: 4),
+      ),
+    );
+    context.go('/login');
+  }
+
+  Widget _buildImagePicker(String label, String type, File? image) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 8),
+        GestureDetector(
+          onTap: () => _pickImage(type),
+          child: Container(
+            height: 120,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey[300]!),
+              borderRadius: BorderRadius.circular(12),
+              color: Colors.grey[50],
+            ),
+            child: image != null
+                ? Stack(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.file(
+                          image,
+                          width: double.infinity,
+                          height: double.infinity,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      Positioned(
+                        top: 8,
+                        right: 8,
+                        child: CircleAvatar(
+                          backgroundColor: Colors.red,
+                          radius: 16,
+                          child: IconButton(
+                            icon: const Icon(Icons.close, size: 16, color: Colors.white),
+                            padding: EdgeInsets.zero,
+                            onPressed: () {
+                              setState(() {
+                                switch (type) {
+                                  case 'id_front':
+                                    _idCardFront = null;
+                                    break;
+                                  case 'id_back':
+                                    _idCardBack = null;
+                                    break;
+                                  case 'license':
+                                    _driverLicense = null;
+                                    break;
+                                  case 'vehicle':
+                                    _vehicleRegistration = null;
+                                    break;
+                                }
+                              });
+                            },
+                          ),
+                        ),
+                      ),
+                    ],
+                  )
+                : Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.add_photo_alternate, size: 40, color: Colors.grey[400]),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Tap to upload',
+                        style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                      ),
+                    ],
+                  ),
+          ),
+        ),
+      ],
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: const Text('Become a Driver'),
+        title: const Text('Apply as Driver'),
       ),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            // Header
-            const Text(
-              'Driver Application',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Join our delivery team and start earning!',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[600],
-              ),
-            ),
-
-            const SizedBox(height: 32),
-
-            // Vehicle Type
-            DropdownButtonFormField<String>(
-              value: _selectedVehicleType,
-              decoration: const InputDecoration(
-                labelText: 'Vehicle Type*',
-                filled: true,
-                fillColor: Colors.white,
-              ),
-              items: _vehicleTypes.map((type) {
-                return DropdownMenuItem(
-                  value: type,
-                  child: Text(type),
-                );
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  _selectedVehicleType = value;
-                });
-              },
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please select vehicle type';
-                }
-                return null;
-              },
-            ),
-
-            const SizedBox(height: 16),
-
-            // Vehicle Number
-            TextFormField(
-              controller: _vehicleNumberController,
-              decoration: const InputDecoration(
-                labelText: 'Vehicle Number*',
-                hintText: 'e.g., ABC-1234',
-                filled: true,
-                fillColor: Colors.white,
-              ),
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Please enter vehicle number';
-                }
-                return null;
-              },
-            ),
-
-            const SizedBox(height: 16),
-
-            // License Number
-            TextFormField(
-              controller: _licenseNumberController,
-              decoration: const InputDecoration(
-                labelText: 'Driver License Number*',
-                filled: true,
-                fillColor: Colors.white,
-              ),
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Please enter license number';
-                }
-                return null;
-              },
-            ),
-
-            const SizedBox(height: 24),
-
-            // License Photo
-            const Text(
-              'Driver License Photo*',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 8),
-            GestureDetector(
-              onTap: _pickLicenseImage,
-              child: Container(
-                height: 200,
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Colors.blue[50],
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey[300]!),
                 ),
-                child: _licenseImage != null
-                    ? Stack(
-                        children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
-                            child: Image.file(
-                              _licenseImage!,
-                              width: double.infinity,
-                              height: double.infinity,
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                          Positioned(
-                            top: 8,
-                            right: 8,
-                            child: IconButton(
-                              icon: const Icon(Icons.close, color: Colors.red),
-                              onPressed: () {
-                                setState(() {
-                                  _licenseImage = null;
-                                });
-                              },
-                              style: IconButton.styleFrom(
-                                backgroundColor: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ],
-                      )
-                    : Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.add_photo_alternate,
-                            size: 60,
-                            color: Colors.grey[400],
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Tap to upload license photo',
-                            style: TextStyle(color: Colors.grey[600]),
-                          ),
-                        ],
-                      ),
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            // Vehicle Photo
-            const Text(
-              'Vehicle Photo*',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 8),
-            GestureDetector(
-              onTap: _pickVehicleImage,
-              child: Container(
-                height: 200,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey[300]!),
-                ),
-                child: _vehicleImage != null
-                    ? Stack(
-                        children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
-                            child: Image.file(
-                              _vehicleImage!,
-                              width: double.infinity,
-                              height: double.infinity,
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                          Positioned(
-                            top: 8,
-                            right: 8,
-                            child: IconButton(
-                              icon: const Icon(Icons.close, color: Colors.red),
-                              onPressed: () {
-                                setState(() {
-                                  _vehicleImage = null;
-                                });
-                              },
-                              style: IconButton.styleFrom(
-                                backgroundColor: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ],
-                      )
-                    : Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.add_photo_alternate,
-                            size: 60,
-                            color: Colors.grey[400],
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Tap to upload vehicle photo',
-                            style: TextStyle(color: Colors.grey[600]),
-                          ),
-                        ],
-                      ),
-              ),
-            ),
-
-            const SizedBox(height: 32),
-
-            // Submit Button
-            SizedBox(
-              height: 50,
-              child: ElevatedButton(
-                onPressed: _isLoading ? null : _submitApplication,
-                child: _isLoading
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Text(
-                        'Submit Application',
+                child: Row(
+                  children: [
+                    Icon(Icons.info_outline, color: Colors.blue[700]),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Admin will review your application within 48 hours.',
                         style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                          color: Colors.blue[900],
+                          fontSize: 13,
                         ),
                       ),
+                    ),
+                  ],
+                ),
               ),
-            ),
+              const SizedBox(height: 24),
 
-            const SizedBox(height: 16),
-          ],
+              const Text(
+                'Vehicle Type *',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 8),
+              DropdownButtonFormField<String>(
+                value: _vehicleType,
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                ),
+                items: const [
+                  DropdownMenuItem(value: 'car', child: Text('Car')),
+                  DropdownMenuItem(value: 'motorcycle', child: Text('Motorcycle')),
+                  DropdownMenuItem(value: 'bike', child: Text('Bike')),
+                ],
+                onChanged: (value) {
+                  setState(() => _vehicleType = value!);
+                },
+              ),
+              const SizedBox(height: 16),
+
+              TextFormField(
+                controller: _vehiclePlateController,
+                decoration: const InputDecoration(
+                  labelText: 'Vehicle Plate Number *',
+                  hintText: 'e.g., ABC123',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter vehicle plate number';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+
+              TextFormField(
+                controller: _licenseNumberController,
+                decoration: const InputDecoration(
+                  labelText: 'Driver License Number *',
+                  hintText: 'e.g., DL123456',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter driver license number';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+
+              const Text(
+                'License Expiry Date *',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 8),
+              GestureDetector(
+                onTap: _selectDate,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey[300]!),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        _licenseExpiryDate != null
+                            ? '${_licenseExpiryDate!.day}/${_licenseExpiryDate!.month}/${_licenseExpiryDate!.year}'
+                            : 'Select date',
+                        style: TextStyle(
+                          color: _licenseExpiryDate != null ? Colors.black : Colors.grey,
+                        ),
+                      ),
+                      Icon(Icons.calendar_today, color: Colors.grey[600], size: 20),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              const Text(
+                'Required Documents *',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Please upload clear, readable photos',
+                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+              ),
+              const SizedBox(height: 16),
+
+              _buildImagePicker('ID Card (Front)', 'id_front', _idCardFront),
+              const SizedBox(height: 16),
+
+              _buildImagePicker('ID Card (Back)', 'id_back', _idCardBack),
+              const SizedBox(height: 16),
+
+              _buildImagePicker('Driver License', 'license', _driverLicense),
+              const SizedBox(height: 16),
+
+              _buildImagePicker('Vehicle Registration', 'vehicle', _vehicleRegistration),
+              const SizedBox(height: 32),
+
+              CustomButton(
+                onPressed: _submitApplication,
+                text: 'Submit Application',
+                isLoading: _isSubmitting,
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
         ),
       ),
     );

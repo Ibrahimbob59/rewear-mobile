@@ -71,7 +71,7 @@ class TokenService {
     } on TimeoutException {
       _logger.e('Token refresh timeout');
       return false;
-    } catch (e, st) {
+    } catch (e) {
       _logger.e('Token refresh error: $e');
       return false;
     } finally {
@@ -112,7 +112,7 @@ class TokenService {
     } on TimeoutException {
       _logger.e('Token validate timeout');
       return false;
-    } catch (e, st) {
+    } catch (e) {
       _logger.e('Token validation error: $e');
       return false;
     }

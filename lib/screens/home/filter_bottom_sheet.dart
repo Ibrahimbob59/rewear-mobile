@@ -13,32 +13,54 @@ class FilterBottomSheet extends StatefulWidget {
 }
 
 class _FilterBottomSheetState extends State<FilterBottomSheet> {
-  String? _selectedSize;
-  String? _selectedCondition;
-  String? _selectedGender;
+  Size? _selectedSize;
+  Condition? _selectedCondition;
+  Gender? _selectedGender;
   double? _minPrice;
   double? _maxPrice;
   bool? _isDonation;
+
+  final _minPriceController = TextEditingController();
+  final _maxPriceController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     final provider = context.read<ItemsProvider>();
-    _selectedSize = provider.selectedSize;
-    _selectedCondition = provider.selectedCondition;
-    _selectedGender = provider.selectedGender;
+    
+    _selectedSize = provider.selectedSize != null
+        ? Size.fromString(provider.selectedSize!)
+        : null;
+    _selectedCondition = provider.selectedCondition != null
+        ? Condition.fromString(provider.selectedCondition!)
+        : null;
+    _selectedGender = provider.selectedGender != null
+        ? Gender.fromString(provider.selectedGender!)
+        : null;
     _minPrice = provider.minPrice;
     _maxPrice = provider.maxPrice;
     _isDonation = provider.isDonation;
+
+    _minPriceController.text = _minPrice?.toString() ?? '';
+    _maxPriceController.text = _maxPrice?.toString() ?? '';
+  }
+
+  @override
+  void dispose() {
+    _minPriceController.dispose();
+    _maxPriceController.dispose();
+    super.dispose();
   }
 
   void _applyFilters() {
     final provider = context.read<ItemsProvider>();
-    provider.setSize(_selectedSize);
-    provider.setCondition(_selectedCondition);
-    provider.setGender(_selectedGender);
+    
+    provider.setSize(_selectedSize?.value);
+    provider.setCondition(_selectedCondition?.value);
+    provider.setGender(_selectedGender?.value);
     provider.setPriceRange(_minPrice, _maxPrice);
     provider.setDonation(_isDonation);
+    
     provider.applyFilters();
     Navigator.pop(context);
   }
@@ -51,7 +73,15 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
       _minPrice = null;
       _maxPrice = null;
       _isDonation = null;
+      _minPriceController.clear();
+      _maxPriceController.clear();
     });
+
+    final provider = context.read<ItemsProvider>();
+    provider.clearFilters();
+    provider.applyFilters();
+    
+    Navigator.pop(context);
   }
 
   @override
@@ -61,194 +91,128 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
         color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      child: SafeArea(
+      padding: const EdgeInsets.all(20),
+      child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Filters',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: _clearFilters,
-                    child: const Text('Clear All'),
-                  ),
-                ],
-              ),
+            Row(
+              children: [
+                const Text(
+                  'Filters',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                const Spacer(),
+                TextButton(
+                  onPressed: _clearFilters,
+                  child: const Text('Clear All'),
+                ),
+              ],
             ),
 
-            const Divider(height: 1),
+            const SizedBox(height: 20),
 
-            // Filters
-            Flexible(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Size
-                    const Text(
-                      'Size',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: Size.all.map((size) {
-                        final isSelected = _selectedSize == size.value;
-                        return ChoiceChip(
-                          label: Text(size.value),
-                          selected: isSelected,
-                          onSelected: (selected) {
-                            setState(() {
-                              _selectedSize = selected ? size.value : null;
-                            });
-                          },
-                        );
-                      }).toList(),
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // Condition
-                    const Text(
-                      'Condition',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: Condition.all.map((condition) {
-                        final isSelected = _selectedCondition == condition.value;
-                        return ChoiceChip(
-                          label: Text(condition.displayName),
-                          selected: isSelected,
-                          onSelected: (selected) {
-                            setState(() {
-                              _selectedCondition = selected ? condition.value : null;
-                            });
-                          },
-                        );
-                      }).toList(),
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // Gender
-                    const Text(
-                      'Gender',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 8,
-                      children: Gender.all.map((gender) {
-                        final isSelected = _selectedGender == gender.value;
-                        return ChoiceChip(
-                          label: Text(gender.displayName),
-                          selected: isSelected,
-                          onSelected: (selected) {
-                            setState(() {
-                              _selectedGender = selected ? gender.value : null;
-                            });
-                          },
-                        );
-                      }).toList(),
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // Price Range
-                    const Text(
-                      'Price Range',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            decoration: const InputDecoration(
-                              labelText: 'Min',
-                              prefixText: '\$',
-                              border: OutlineInputBorder(),
-                            ),
-                            keyboardType: TextInputType.number,
-                            onChanged: (value) {
-                              _minPrice = double.tryParse(value);
-                            },
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: TextField(
-                            decoration: const InputDecoration(
-                              labelText: 'Max',
-                              prefixText: '\$',
-                              border: OutlineInputBorder(),
-                            ),
-                            keyboardType: TextInputType.number,
-                            onChanged: (value) {
-                              _maxPrice = double.tryParse(value);
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // Donation
-                    CheckboxListTile(
-                      title: const Text('Show donations only'),
-                      value: _isDonation ?? false,
-                      onChanged: (value) {
-                        setState(() {
-                          _isDonation = value;
-                        });
-                      },
-                      contentPadding: EdgeInsets.zero,
-                    ),
-                  ],
-                ),
-              ),
+            const Text('Size', style: TextStyle(fontWeight: FontWeight.w600)),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              children: Size.all.map((size) {
+                return ChoiceChip(
+                  label: Text(size.displayName),
+                  selected: _selectedSize == size,
+                  onSelected: (selected) {
+                    setState(() => _selectedSize = selected ? size : null);
+                  },
+                );
+              }).toList(),
             ),
 
-            // Apply Button
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _applyFilters,
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+            const SizedBox(height: 20),
+
+            const Text('Condition', style: TextStyle(fontWeight: FontWeight.w600)),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              children: Condition.all.map((condition) {
+                return ChoiceChip(
+                  label: Text(condition.displayName),
+                  selected: _selectedCondition == condition,
+                  onSelected: (selected) {
+                    setState(() => _selectedCondition = selected ? condition : null);
+                  },
+                );
+              }).toList(),
+            ),
+
+            const SizedBox(height: 20),
+
+            const Text('Gender', style: TextStyle(fontWeight: FontWeight.w600)),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              children: Gender.all.map((gender) {
+                return ChoiceChip(
+                  label: Text(gender.displayName),
+                  selected: _selectedGender == gender,
+                  onSelected: (selected) {
+                    setState(() => _selectedGender = selected ? gender : null);
+                  },
+                );
+              }).toList(),
+            ),
+
+            const SizedBox(height: 20),
+
+            const Text('Price Range', style: TextStyle(fontWeight: FontWeight.w600)),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _minPriceController,
+                    decoration: const InputDecoration(
+                      labelText: 'Min',
+                      prefixText: '\$',
+                      border: OutlineInputBorder(),
+                    ),
+                    keyboardType: TextInputType.number,
+                    onChanged: (v) => _minPrice = double.tryParse(v),
                   ),
-                  child: const Text('Apply Filters'),
                 ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: TextField(
+                    controller: _maxPriceController,
+                    decoration: const InputDecoration(
+                      labelText: 'Max',
+                      prefixText: '\$',
+                      border: OutlineInputBorder(),
+                    ),
+                    keyboardType: TextInputType.number,
+                    onChanged: (v) => _maxPrice = double.tryParse(v),
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 16),
+
+            SwitchListTile(
+              title: const Text('Show only donations'),
+              value: _isDonation ?? false,
+              onChanged: (v) => setState(() => _isDonation = v),
+              contentPadding: EdgeInsets.zero,
+            ),
+
+            const SizedBox(height: 24),
+
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton(
+                onPressed: _applyFilters,
+                child: const Text('Apply Filters'),
               ),
             ),
           ],

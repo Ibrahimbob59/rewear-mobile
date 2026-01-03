@@ -25,7 +25,7 @@ class ItemsProvider with ChangeNotifier {
   bool? _isDonation;
   double? _minPrice;
   double? _maxPrice;
-  String? _sortBy;
+  String? _sortBy = 'newest';
   int _currentPage = 1;
 
   // Getters
@@ -50,7 +50,7 @@ class ItemsProvider with ChangeNotifier {
   bool? get isDonation => _isDonation;
   double? get minPrice => _minPrice;
   double? get maxPrice => _maxPrice;
-  String? get sortBy => _sortBy;
+  String? get sortBy => _sortBy ?? 'newest';
 
   // Filter setters
   void setCategory(String? category) {
@@ -85,17 +85,13 @@ class ItemsProvider with ChangeNotifier {
   }
 
   void setSortBy(String? sortBy) {
-    _sortBy = sortBy;
+    _sortBy = sortBy ?? 'newest';
     notifyListeners();
   }
 
   void setSearchQuery(String? query) {
     _searchQuery = query;
     notifyListeners();
-  }
-
-  Future<void> applyFilters() async {
-    await loadItems(refresh: true);
   }
 
   void clearFilters() {
@@ -107,11 +103,14 @@ class ItemsProvider with ChangeNotifier {
     _isDonation = null;
     _minPrice = null;
     _maxPrice = null;
-    _sortBy = null;
+    _sortBy = 'newest';
     notifyListeners();
   }
 
-  // Load items
+  Future<void> applyFilters() async {
+    await loadItems(refresh: true);
+  }
+
   Future<void> loadItems({bool refresh = false}) async {
     if (refresh) {
       _currentPage = 1;
@@ -134,7 +133,7 @@ class ItemsProvider with ChangeNotifier {
         isDonation: _isDonation,
         minPrice: _minPrice,
         maxPrice: _maxPrice,
-        sortBy: _sortBy,
+        sortBy: _sortBy ?? 'newest',
         page: _currentPage,
       );
 
@@ -147,26 +146,22 @@ class ItemsProvider with ChangeNotifier {
         _items.addAll(newItems);
       }
 
-      _isLoading = false;
-      _isLoadingMore = false;
-      notifyListeners();
+      _error = null;
     } catch (e) {
       _error = e.toString();
+      debugPrint('❌ Error loading items: $e');
+    } finally {
       _isLoading = false;
       _isLoadingMore = false;
       notifyListeners();
     }
   }
 
-  Future<void> loadMore() async {
-    if (_isLoadingMore || !hasMore) return;
+  Future<void> loadMoreItems() async {
+    if (!hasMore || _isLoadingMore || _isLoading) return;
     _currentPage++;
-    await loadItems();
+    await loadItems(refresh: false);
   }
-
-  Future<void> loadMoreItems() async => await loadMore();
-
-  Future<void> refreshItems() async => await loadItems(refresh: true);
 
   Future<void> loadItem(int id) async {
     _isLoading = true;
@@ -175,10 +170,11 @@ class ItemsProvider with ChangeNotifier {
 
     try {
       _selectedItem = await _itemsService.getItem(id);
-      _isLoading = false;
-      notifyListeners();
+      _error = null;
     } catch (e) {
       _error = e.toString();
+      debugPrint('❌ Error loading item: $e');
+    } finally {
       _isLoading = false;
       notifyListeners();
     }
@@ -191,10 +187,11 @@ class ItemsProvider with ChangeNotifier {
 
     try {
       _myListings = await _itemsService.getMyListings();
-      _isLoading = false;
-      notifyListeners();
+      _error = null;
     } catch (e) {
       _error = e.toString();
+      debugPrint('❌ Error loading my listings: $e');
+    } finally {
       _isLoading = false;
       notifyListeners();
     }
@@ -238,6 +235,7 @@ class ItemsProvider with ChangeNotifier {
       return true;
     } catch (e) {
       _error = e.toString();
+      debugPrint('❌ Error creating item: $e');
       _isLoading = false;
       notifyListeners();
       return false;
@@ -264,8 +262,8 @@ class ItemsProvider with ChangeNotifier {
         condition: condition,
       );
 
-      final index = _myListings.indexWhere((i) => i.id == id);
-      if (index != -1) _myListings[index] = item;
+      final myListingsIndex = _myListings.indexWhere((i) => i.id == id);
+      if (myListingsIndex != -1) _myListings[myListingsIndex] = item;
 
       final itemsIndex = _items.indexWhere((i) => i.id == id);
       if (itemsIndex != -1) _items[itemsIndex] = item;
@@ -277,6 +275,7 @@ class ItemsProvider with ChangeNotifier {
       return true;
     } catch (e) {
       _error = e.toString();
+      debugPrint('❌ Error updating item: $e');
       _isLoading = false;
       notifyListeners();
       return false;
@@ -286,12 +285,17 @@ class ItemsProvider with ChangeNotifier {
   Future<bool> deleteItem(int id) async {
     try {
       await _itemsService.deleteItem(id);
+      
       _myListings.removeWhere((i) => i.id == id);
       _items.removeWhere((i) => i.id == id);
+      
+      if (_selectedItem?.id == id) _selectedItem = null;
+      
       notifyListeners();
       return true;
     } catch (e) {
       _error = e.toString();
+      debugPrint('❌ Error deleting item: $e');
       notifyListeners();
       return false;
     }
@@ -300,24 +304,27 @@ class ItemsProvider with ChangeNotifier {
   Future<bool> toggleItemStatus(int id) async {
     try {
       final item = await _itemsService.toggleItemStatus(id);
+      
       final index = _myListings.indexWhere((i) => i.id == id);
       if (index != -1) _myListings[index] = item;
+      
       notifyListeners();
       return true;
     } catch (e) {
       _error = e.toString();
+      debugPrint('❌ Error toggling item status: $e');
       notifyListeners();
       return false;
     }
   }
 
-  void clearError() {
-    _error = null;
+  void clearSelectedItem() {
+    _selectedItem = null;
     notifyListeners();
   }
 
-  void clearSelectedItem() {
-    _selectedItem = null;
+  void clearError() {
+    _error = null;
     notifyListeners();
   }
 }

@@ -28,7 +28,7 @@ class _CreateItemScreenState extends State<CreateItemScreen> {
   final _colorController = TextEditingController();
 
   // Form values
-  List<File> _images = [];
+  final List<File> _images = [];
   Category? _selectedCategory;
   Size? _selectedSize;
   Condition? _selectedCondition;

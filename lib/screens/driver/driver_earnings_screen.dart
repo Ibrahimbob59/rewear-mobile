@@ -180,7 +180,7 @@ class _DriverEarningsScreenState extends State<DriverEarningsScreen> {
                               ],
                             ),
                           );
-                        }).toList(),
+                        }),
                       ],
                     ),
                   ),

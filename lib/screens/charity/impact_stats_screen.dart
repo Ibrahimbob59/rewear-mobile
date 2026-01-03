@@ -160,8 +160,8 @@ class _ImpactStatsScreenState extends State<ImpactStatsScreen> {
                     ),
                     child: LineChart(
                       LineChartData(
-                        gridData: FlGridData(show: false),
-                        titlesData: FlTitlesData(
+                        gridData: const FlGridData(show: false),
+                        titlesData: const FlTitlesData(
                           leftTitles: AxisTitles(
                             sideTitles: SideTitles(showTitles: true),
                           ),
@@ -182,7 +182,7 @@ class _ImpactStatsScreenState extends State<ImpactStatsScreen> {
                             isCurved: true,
                             color: Theme.of(context).primaryColor,
                             barWidth: 3,
-                            dotData: FlDotData(show: true),
+                            dotData: const FlDotData(show: true),
                           ),
                         ],
                       ),

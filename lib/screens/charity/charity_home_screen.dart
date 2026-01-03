@@ -3,14 +3,9 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/auth_provider.dart';
 
-class DriverDashboardScreen extends StatefulWidget {
-  const DriverDashboardScreen({super.key});
+class CharityHomeScreen extends StatelessWidget {
+  const CharityHomeScreen({super.key});
 
-  @override
-  State<DriverDashboardScreen> createState() => _DriverDashboardScreenState();
-}
-
-class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
@@ -18,7 +13,7 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Driver Dashboard'),
+        title: const Text('Charity Dashboard'),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
@@ -36,13 +31,14 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Welcome Card
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    Theme.of(context).primaryColor,
-                    Theme.of(context).primaryColor.withAlpha(200),
+                    Colors.green[600]!,
+                    Colors.green[400]!,
                   ],
                 ),
                 borderRadius: BorderRadius.circular(16),
@@ -53,8 +49,8 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
                     radius: 30,
                     backgroundColor: Colors.white,
                     child: Icon(
-                      Icons.local_shipping,
-                      color: Theme.of(context).primaryColor,
+                      Icons.volunteer_activism,
+                      color: Colors.green[600],
                       size: 32,
                     ),
                   ),
@@ -64,14 +60,14 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Welcome back,',
+                          'Welcome,',
                           style: TextStyle(
                             color: Colors.white.withAlpha(230),
                             fontSize: 14,
                           ),
                         ),
                         Text(
-                          user?.name ?? 'Driver',
+                          user?.name ?? 'Charity',
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 20,
@@ -86,8 +82,9 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
             ),
             const SizedBox(height: 24),
 
+            // Stats Overview
             const Text(
-              'Today\'s Overview',
+              'Impact Overview',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -98,25 +95,26 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
               children: [
                 Expanded(
                   child: _StatCard(
-                    icon: Icons.delivery_dining,
-                    label: 'Deliveries',
+                    icon: Icons.favorite,
+                    label: 'Claimed',
                     value: '0',
-                    color: Colors.blue,
+                    color: Colors.orange,
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: _StatCard(
-                    icon: Icons.attach_money,
-                    label: 'Earnings',
-                    value: '\$0.00',
-                    color: Colors.green,
+                    icon: Icons.people_outline,
+                    label: 'Helped',
+                    value: '0',
+                    color: Colors.purple,
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 24),
 
+            // Quick Actions
             const Text(
               'Quick Actions',
               style: TextStyle(
@@ -125,62 +123,28 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
               ),
             ),
             const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: _ActionCard(
-                    icon: Icons.list_alt,
-                    label: 'My Deliveries',
-                    count: 0,
-                    onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Feature coming soon')),
-                      );
-                    },
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _ActionCard(
-                    icon: Icons.account_balance_wallet,
-                    label: 'Earnings',
-                    onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Feature coming soon')),
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-
-            const Text(
-              'Active Deliveries',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+            _ActionButton(
+              icon: Icons.card_giftcard,
+              label: 'Browse Available Donations',
+              description: 'Find items donated by the community',
+              color: Colors.blue,
+              onTap: () => context.push('/charity/donations'),
             ),
             const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(32),
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Center(
-                child: Column(
-                  children: [
-                    Icon(Icons.inbox, size: 48, color: Colors.grey[400]),
-                    const SizedBox(height: 8),
-                    Text(
-                      'No active deliveries',
-                      style: TextStyle(color: Colors.grey[600]),
-                    ),
-                  ],
-                ),
-              ),
+            _ActionButton(
+              icon: Icons.check_circle_outline,
+              label: 'My Claimed Donations',
+              description: 'View donations you\'ve claimed',
+              color: Colors.green,
+              onTap: () => context.push('/charity/claimed'),
+            ),
+            const SizedBox(height: 12),
+            _ActionButton(
+              icon: Icons.volunteer_activism,
+              label: 'Donate Items',
+              description: 'Create a donation listing',
+              color: Colors.orange,
+              onTap: () => context.push('/charity/donate'),
             ),
           ],
         ),
@@ -237,16 +201,18 @@ class _StatCard extends StatelessWidget {
   }
 }
 
-class _ActionCard extends StatelessWidget {
+class _ActionButton extends StatelessWidget {
   final IconData icon;
   final String label;
-  final int? count;
+  final String description;
+  final Color color;
   final VoidCallback onTap;
 
-  const _ActionCard({
+  const _ActionButton({
     required this.icon,
     required this.label,
-    this.count,
+    required this.description,
+    required this.color,
     required this.onTap,
   });
 
@@ -262,42 +228,40 @@ class _ActionCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: Colors.grey[300]!),
         ),
-        child: Column(
+        child: Row(
           children: [
-            Stack(
-              children: [
-                Icon(icon, size: 32, color: Theme.of(context).primaryColor),
-                if (count != null && count! > 0)
-                  Positioned(
-                    right: 0,
-                    top: 0,
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: const BoxDecoration(
-                        color: Colors.red,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Text(
-                        count.toString(),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: color.withAlpha(25),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, color: color, size: 28),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
+                  const SizedBox(height: 4),
+                  Text(
+                    description,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ],
               ),
             ),
+            Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey[400]),
           ],
         ),
       ),

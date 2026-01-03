@@ -7,12 +7,10 @@ import 'config/theme.dart';
 import 'config/router.dart';
 
 // Services
-import 'services/api_service.dart';
 import 'services/items_service.dart';
 import 'services/orders_service.dart';
 import 'services/addresses_service.dart';
 import 'services/favorites_service.dart';
-import 'services/image_upload_service.dart';
 import 'services/driver_service.dart';
 import 'services/delivery_service.dart';
 import 'services/charity_service.dart';

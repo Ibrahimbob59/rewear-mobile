@@ -151,5 +151,51 @@ class AuthProvider with ChangeNotifier {
   void clearError() {
     _errorMessage = null;
     notifyListeners();
+  }// Change Password
+  Future<bool> changePassword({
+    required String oldPassword,
+    required String newPassword,
+  }) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    final response = await _authService.changePassword(
+      oldPassword: oldPassword,
+      newPassword: newPassword,
+      newPasswordConfirmation: newPassword,  // ← ADDED THIS
+    );
+
+    _isLoading = false;
+
+    if (response.success) {
+      notifyListeners();
+      return true;
+    } else {
+      _errorMessage = response.firstError;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  // Deactivate Account
+  Future<bool> deactivateAccount() async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    final response = await _authService.deleteAccount('User requested account deletion');  // ← ADDED REASON
+
+    _isLoading = false;
+
+    if (response.success) {
+      _user = null;
+      notifyListeners();
+      return true;
+    } else {
+      _errorMessage = response.firstError;
+      notifyListeners();
+      return false;
+    }
   }
 }

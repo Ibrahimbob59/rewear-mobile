@@ -60,6 +60,20 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        actions: [
+          TextButton.icon(
+            icon: const Icon(Icons.local_shipping, size: 18),
+            label: const Text('Apply as Driver'),
+            style: TextButton.styleFrom(
+              foregroundColor: AppTheme.primaryColor,
+            ),
+            onPressed: () => context.push('/driver-application'),
+          ),
+        ],
+      ),
       body: LoadingOverlay(
         isLoading: _isLoading,
         child: SafeArea(
@@ -93,8 +107,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 8),
                   
                   Text(
-                    'Buy, Sell, Donate',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    'Sustainable Fashion Marketplace',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: AppTheme.textSecondary,
                     ),
                     textAlign: TextAlign.center,
@@ -119,31 +133,14 @@ class _LoginScreenState extends State<LoginScreen> {
                     controller: _passwordController,
                     label: 'Password',
                     hint: 'Enter your password',
-                    prefixIcon: Icons.lock_outline,
+                    prefixIcon: Icons.lock_outlined,
                     isPassword: true,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Password is required';
+                        return 'Please enter your password';
                       }
                       return null;
                     },
-                  ),
-                  
-                  const SizedBox(height: 8),
-                  
-                  // Forgot Password
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton(
-                      onPressed: () {
-                        // TODO: Implement forgot password
-                        Helpers.showSnackBar(
-                          context,
-                          'Forgot password feature coming soon',
-                        );
-                      },
-                      child: const Text('Forgot Password?'),
-                    ),
                   ),
                   
                   const SizedBox(height: 24),

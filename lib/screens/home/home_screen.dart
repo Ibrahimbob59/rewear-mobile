@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:dio/dio.dart';
 import '../../providers/items_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../models/category_enum.dart';
@@ -24,12 +25,10 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     
-    // Load items on init
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<ItemsProvider>().loadItems(refresh: true);
     });
 
-    // Setup pagination
     _scrollController.addListener(_onScroll);
   }
 
@@ -59,6 +58,67 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  void _showSortOptions() {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        final provider = context.read<ItemsProvider>();
+        return Container(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Sort By',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 16),
+              _SortOption(
+                title: 'Newest First',
+                isSelected: provider.sortBy == 'newest',
+                onTap: () {
+                  provider.setSortBy('newest');
+                  provider.applyFilters();
+                  Navigator.pop(context);
+                },
+              ),
+              _SortOption(
+                title: 'Oldest First',
+                isSelected: provider.sortBy == 'oldest',
+                onTap: () {
+                  provider.setSortBy('oldest');
+                  provider.applyFilters();
+                  Navigator.pop(context);
+                },
+              ),
+              _SortOption(
+                title: 'Price: Low to High',
+                isSelected: provider.sortBy == 'price_low',
+                onTap: () {
+                  provider.setSortBy('price_low');
+                  provider.applyFilters();
+                  Navigator.pop(context);
+                },
+              ),
+              _SortOption(
+                title: 'Price: High to Low',
+                isSelected: provider.sortBy == 'price_high',
+                onTap: () {
+                  provider.setSortBy('price_high');
+                  provider.applyFilters();
+                  Navigator.pop(context);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   void _onCategorySelected(String? category) {
     setState(() {
       _selectedCategory = category;
@@ -69,6 +129,19 @@ class _HomeScreenState extends State<HomeScreen> {
     provider.applyFilters();
   }
 
+  String _getSortLabel(String? sortBy) {
+    switch (sortBy) {
+      case 'oldest':
+        return 'Oldest';
+      case 'price_low':
+        return 'Price ↑';
+      case 'price_high':
+        return 'Price ↓';
+      default:
+        return 'Newest';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
@@ -77,7 +150,6 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       
-      // App Bar
       appBar: AppBar(
         title: const Text(
           'ReWear',
@@ -87,16 +159,13 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
         actions: [
-          // Search
           IconButton(
             icon: const Icon(Icons.search),
             onPressed: () {
-              // TODO: Navigate to search screen
               context.push('/search');
             },
           ),
           
-          // Favorites
           IconButton(
             icon: const Icon(Icons.favorite_border),
             onPressed: () {
@@ -104,7 +173,6 @@ class _HomeScreenState extends State<HomeScreen> {
             },
           ),
           
-          // Cart
           IconButton(
             icon: const Icon(Icons.shopping_bag_outlined),
             onPressed: () {
@@ -114,10 +182,10 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
 
-      // Body
       body: Column(
         children: [
-          // User greeting
+          const _StatsBar(),
+          
           if (user != null)
             Container(
               padding: const EdgeInsets.all(16),
@@ -160,7 +228,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
 
-          // Category Filters
           Container(
             height: 50,
             color: Colors.white,
@@ -188,7 +255,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
 
-          // Filter & Sort Bar
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
@@ -230,17 +296,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Consumer<ItemsProvider>(
                     builder: (context, provider, child) {
                       return OutlinedButton.icon(
-                        onPressed: () {
-                          // TODO: Show sort options
-                        },
+                        onPressed: _showSortOptions,
                         icon: const Icon(Icons.sort, size: 18),
-                        label: Text(
-                          provider.sortBy == 'newest' 
-                              ? 'Newest' 
-                              : provider.sortBy == 'price_asc'
-                                  ? 'Price: Low'
-                                  : 'Price: High',
-                        ),
+                        label: Text(_getSortLabel(provider.sortBy)),
                       );
                     },
                   ),
@@ -249,18 +307,15 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
 
-          // Items Grid
           Expanded(
             child: Consumer<ItemsProvider>(
               builder: (context, itemsProvider, child) {
-                // Loading state
                 if (itemsProvider.isLoading && itemsProvider.items.isEmpty) {
                   return const Center(
                     child: CircularProgressIndicator(),
                   );
                 }
 
-                // Error state
                 if (itemsProvider.error != null && itemsProvider.items.isEmpty) {
                   return EmptyState(
                     icon: Icons.error_outline,
@@ -271,7 +326,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   );
                 }
 
-                // Empty state
                 if (itemsProvider.items.isEmpty) {
                   return EmptyState(
                     icon: Icons.shopping_bag_outlined,
@@ -285,7 +339,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   );
                 }
 
-                // Items grid
                 return RefreshIndicator(
                   onRefresh: _onRefresh,
                   child: GridView.builder(
@@ -300,7 +353,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     itemCount: itemsProvider.items.length + 
                         (itemsProvider.isLoadingMore ? 2 : 0),
                     itemBuilder: (context, index) {
-                      // Show loading indicators at bottom
                       if (index >= itemsProvider.items.length) {
                         return const Center(
                           child: CircularProgressIndicator(),
@@ -323,7 +375,6 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
 
-      // Floating Action Button
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
           context.push('/create-item');
@@ -331,6 +382,148 @@ class _HomeScreenState extends State<HomeScreen> {
         icon: const Icon(Icons.add),
         label: const Text('Sell Item'),
       ),
+    );
+  }
+}
+
+class _SortOption extends StatelessWidget {
+  final String title;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _SortOption({
+    required this.title,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      title: Text(title),
+      trailing: isSelected ? const Icon(Icons.check, color: Colors.green) : null,
+      onTap: onTap,
+    );
+  }
+}
+
+class _StatsBar extends StatefulWidget {
+  const _StatsBar();
+
+  @override
+  State<_StatsBar> createState() => _StatsBarState();
+}
+
+class _StatsBarState extends State<_StatsBar> {
+  Map<String, int>? _stats;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchStats();
+  }
+
+  Future<void> _fetchStats() async {
+    try {
+      final dio = Dio();
+      final response = await dio.get('http://localhost:8000/api/stats/public');
+      setState(() {
+        _stats = {
+          'items_sold': response.data['data']['items_sold'] ?? 0,
+          'total_donations': response.data['data']['total_donations'] ?? 0,
+        };
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _stats = {'items_sold': 0, 'total_donations': 0};
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Container(
+        height: 80,
+        color: Colors.green[50],
+        child: const Center(
+          child: SizedBox(
+            height: 20,
+            width: 20,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.green[400]!, Colors.green[600]!],
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _StatBadge(
+            icon: Icons.shopping_bag,
+            label: 'Items Sold',
+            value: '${_stats!['items_sold']}',
+          ),
+          Container(
+            height: 40,
+            width: 1,
+            color: Colors.white.withOpacity(0.3),
+          ),
+          _StatBadge(
+            icon: Icons.favorite,
+            label: 'Donations',
+            value: '${_stats!['total_donations']}',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatBadge extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+
+  const _StatBadge({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, color: Colors.white, size: 28),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            color: Colors.white.withOpacity(0.9),
+          ),
+        ),
+      ],
     );
   }
 }
