@@ -1,0 +1,47 @@
+the app is finished but no thing is working properly :
+* most of apis endpoints doesnt match the backend 
+* screens are not proffessional and they are as you are a kid drawing
+* user ,charity,driver flow are ignored from you when you code 
+* i need the app to work properly 
+
+
+what you should do:
+* read the reppoo for admin-mobile and see the file that i will send to you about the apis responses and excpectations and documentations then see if there is a miss match 
+* concerning the UI 
+I need you to modify the existing ReWear mobile application UI with these specific enhancements:
+1. Bottom Navigation Bar - Create a fixed-position bottom navigation bar with these 4 tabs in this exact order:
+   * Home (House icon) - Default active state
+   * Cart (Shopping cart icon) - Include a badge notification for items in cart
+   * Orders (Clipboard list icon)
+   * Profile (User icon)
+The navbar should be:
+   * Fixed at the bottom with appropriate safe area padding
+   * Use a professional green color scheme (#2A9D8F primary, #21867A for active states)
+   * Include both icons and labels for each tab
+   * Have smooth hover/active state transitions
+   * Show a subtle scale animation when tabs are tapped
+2. Profile Screen - Design a clean, professional profile interface that includes:
+   * Header Section:
+      * User avatar (circular with initials or image)
+      * User name and email displayed prominently
+      * Edit button for profile modifications
+   * Statistics Grid (3-column layout showing):
+      * Total Orders count
+      * Active Listings count
+      * Donations Made count
+   * Settings Menu (vertical list with icons):
+      * My Listings (shopping bag icon)
+      * Favorites (heart icon)
+      * Addresses (location icon)
+      * Privacy & Security (shield icon)
+      * Help & Support (question mark icon)
+   * Logout Button at the bottom
+Key Requirements:
+* Maintain the existing professional green color palette (#2A9D8F primary)
+* Use consistent spacing (8px grid system)
+* Include proper hover, active, and disabled states
+* Follow accessibility standards (contrast ratios, tap targets)
+* Keep animations subtle (150-300ms duration)
+* Ensure the design feels "calm, trustworthy, and human" as per the original design philosophy
+
+
