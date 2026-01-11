@@ -8,49 +8,75 @@ class CharityProvider with ChangeNotifier {
   CharityProvider(this._charityService);
 
   Charity? _charity;
-  List<DonatedItem> _pendingDonations = [];
-  List<DonatedItem> _acceptedDonations = [];
+  Map<String, dynamic>? _dashboard;
+  List<DonatedItem> _availableDonations = [];
+  List<DonatedItem> _myDonations = [];
   Map<String, dynamic>? _impactStats;
   bool _isLoading = false;
   String? _error;
 
   Charity? get charity => _charity;
-  List<DonatedItem> get pendingDonations => _pendingDonations;
-  List<DonatedItem> get acceptedDonations => _acceptedDonations;
+  Map<String, dynamic>? get dashboard => _dashboard;
+  List<DonatedItem> get availableDonations => _availableDonations;
+  List<DonatedItem> get myDonations => _myDonations;
+  List<DonatedItem> get pendingDonations => _availableDonations;
+  List<DonatedItem> get acceptedDonations => _myDonations;
   Map<String, dynamic>? get impactStats => _impactStats;
   bool get isLoading => _isLoading;
   String? get error => _error;
 
-  bool get isCharity => _charity != null;
-  int get pendingCount => _pendingDonations.length;
-  int get acceptedCount => _acceptedDonations.length;
+  bool get isCharity => _charity != null || _dashboard != null;
+  int get pendingCount => _availableDonations.length;
+  int get acceptedCount => _myDonations.length;
 
-  // Load charity profile
+  Future<void> loadDashboard() async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      _dashboard = await _charityService.getDashboard();
+      _isLoading = false;
+      notifyListeners();
+    } catch (e) {
+      _error = e.toString();
+      _dashboard = null;
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
   Future<void> loadCharityProfile() async {
+    await loadDashboard();
+  }
+
+  Future<void> loadAvailableDonations() async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      _charity = await _charityService.getCharityProfile();
+      _availableDonations = await _charityService.getAvailableDonations();
       _isLoading = false;
       notifyListeners();
     } catch (e) {
       _error = e.toString();
-      _charity = null;
       _isLoading = false;
       notifyListeners();
     }
   }
 
-  // Load pending donations
   Future<void> loadPendingDonations() async {
+    await loadAvailableDonations();
+  }
+
+  Future<void> loadMyDonations() async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      _pendingDonations = await _charityService.getPendingDonations();
+      _myDonations = await _charityService.getMyDonations();
       _isLoading = false;
       notifyListeners();
     } catch (e) {
@@ -60,33 +86,16 @@ class CharityProvider with ChangeNotifier {
     }
   }
 
-  // Load accepted donations
   Future<void> loadAcceptedDonations() async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
-
-    try {
-      _acceptedDonations = await _charityService.getAcceptedDonations();
-      _isLoading = false;
-      notifyListeners();
-    } catch (e) {
-      _error = e.toString();
-      _isLoading = false;
-      notifyListeners();
-    }
+    await loadMyDonations();
   }
 
-  // Accept donation
-  Future<bool> acceptDonation(int donationId) async {
+  Future<bool> acceptDonation(int itemId) async {
     try {
-      final donation = await _charityService.acceptDonation(donationId);
+      final donation = await _charityService.acceptDonation(itemId);
       
-      // Remove from pending
-      _pendingDonations.removeWhere((d) => d.id == donationId);
-      
-      // Add to accepted
-      _acceptedDonations.insert(0, donation);
+      _availableDonations.removeWhere((d) => d.id == itemId);
+      _myDonations.insert(0, donation);
       
       notifyListeners();
       return true;
@@ -97,24 +106,22 @@ class CharityProvider with ChangeNotifier {
     }
   }
 
-  // Reject donation
   Future<bool> rejectDonation(int donationId, {String? reason}) async {
+    _availableDonations.removeWhere((d) => d.id == donationId);
+    notifyListeners();
+    return true;
+  }
+
+  Future<void> markDistributed(int orderId) async {
     try {
-      await _charityService.rejectDonation(donationId, reason: reason);
-      
-      // Remove from pending
-      _pendingDonations.removeWhere((d) => d.id == donationId);
-      
+      await _charityService.markDistributed(orderId);
       notifyListeners();
-      return true;
     } catch (e) {
       _error = e.toString();
       notifyListeners();
-      return false;
     }
   }
 
-  // Load impact stats
   Future<void> loadImpactStats() async {
     try {
       _impactStats = await _charityService.getImpactStats();

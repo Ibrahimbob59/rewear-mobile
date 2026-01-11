@@ -9,14 +9,16 @@ class DriverProvider with ChangeNotifier {
   DriverProvider(this._driverService);
 
   Driver? _driver;
-  Map<String, dynamic>? _stats;
+  Map<String, dynamic>? _dashboard;
   Map<String, dynamic>? _earnings;
+  Map<String, dynamic>? _application;
   bool _isLoading = false;
   String? _error;
 
   Driver? get driver => _driver;
-  Map<String, dynamic>? get stats => _stats;
+  Map<String, dynamic>? get dashboard => _dashboard;
   Map<String, dynamic>? get earnings => _earnings;
+  Map<String, dynamic>? get application => _application;
   bool get isLoading => _isLoading;
   String? get error => _error;
 
@@ -26,7 +28,6 @@ class DriverProvider with ChangeNotifier {
   bool get isAvailable => _driver?.isAvailable ?? false;
   bool get isRejected => _driver?.isRejected ?? false;
 
-  // Apply as driver
   Future<bool> applyAsDriver({
     required String vehicleType,
     required String vehicleNumber,
@@ -57,50 +58,42 @@ class DriverProvider with ChangeNotifier {
     }
   }
 
-  // Load driver profile
-  Future<void> loadDriverProfile() async {
+  Future<void> loadDashboard() async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      _driver = await _driverService.getDriverProfile();
+      _dashboard = await _driverService.getDashboard();
       _isLoading = false;
       notifyListeners();
     } catch (e) {
       _error = e.toString();
-      _driver = null;
+      _dashboard = null;
       _isLoading = false;
       notifyListeners();
     }
   }
 
-  // Toggle availability
-  Future<bool> toggleAvailability() async {
-    if (_driver == null) return false;
-
+  Future<void> loadMyApplication() async {
     try {
-      _driver = await _driverService.toggleAvailability(!_driver!.isAvailable);
+      _application = await _driverService.getMyApplication();
       notifyListeners();
-      return true;
+    } catch (e) {
+      print('Error loading application: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>?> checkEligibility() async {
+    try {
+      return await _driverService.checkEligibility();
     } catch (e) {
       _error = e.toString();
       notifyListeners();
-      return false;
+      return null;
     }
   }
 
-  // Load stats
-  Future<void> loadStats() async {
-    try {
-      _stats = await _driverService.getDriverStats();
-      notifyListeners();
-    } catch (e) {
-      print('Error loading stats: $e');
-    }
-  }
-
-  // Load earnings
   Future<void> loadEarnings({String? period}) async {
     _isLoading = true;
     notifyListeners();

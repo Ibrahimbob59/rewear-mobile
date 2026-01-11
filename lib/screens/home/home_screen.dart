@@ -427,7 +427,7 @@ class _StatsBarState extends State<_StatsBar> {
   Future<void> _fetchStats() async {
     try {
       final dio = Dio();
-      final response = await dio.get('http://localhost:8000/api/stats/public');
+      final response = await dio.get('http://10.0.2.2:8000/api/admin/stats');
       setState(() {
         _stats = {
           'items_sold': response.data['data']['items_sold'] ?? 0,

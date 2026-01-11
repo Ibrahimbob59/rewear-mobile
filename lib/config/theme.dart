@@ -2,26 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  // Colors
-  static const Color primaryColor = Color(0xFF2E7D32); // Green
-  static const Color secondaryColor = Color(0xFF66BB6A);
-  static const Color accentColor = Color(0xFFFF6F00); // Orange
+  static const Color primaryColor = Color(0xFF2A9D8F);
+  static const Color primaryDark = Color(0xFF21867A);
+  static const Color secondaryColor = Color(0xFF57B894);
+  static const Color accentColor = Color(0xFFE9C46A);
   static const Color backgroundColor = Color(0xFFF5F5F5);
-  static const Color errorColor = Color(0xFFD32F2F);
-  static const Color successColor = Color(0xFF388E3C);
-  static const Color warningColor = Color(0xFFFFA000);
+  static const Color errorColor = Color(0xFFE76F51);
+  static const Color successColor = Color(0xFF2A9D8F);
+  static const Color warningColor = Color(0xFFF4A261);
   
-  // Text Colors
-  static const Color textPrimary = Color(0xFF212121);
-  static const Color textSecondary = Color(0xFF757575);
+  static const Color textPrimary = Color(0xFF264653);
+  static const Color textSecondary = Color(0xFF6B7280);
   static const Color textHint = Color(0xFFBDBDBD);
   static const Color textWhite = Color(0xFFFFFFFF);
   
-  // Card & Surface
   static const Color cardColor = Color(0xFFFFFFFF);
   static const Color surfaceColor = Color(0xFFFFFFFF);
   
-  // Theme Data
   static ThemeData lightTheme = ThemeData(
     useMaterial3: true,
     primaryColor: primaryColor,
@@ -31,11 +28,9 @@ class AppTheme {
       primary: primaryColor,
       secondary: secondaryColor,
       error: errorColor,
-     surface: backgroundColor,
-     
+      surface: backgroundColor,
     ),
     
-    // Text Theme
     textTheme: TextTheme(
       displayLarge: GoogleFonts.poppins(
         fontSize: 32,
@@ -84,7 +79,6 @@ class AppTheme {
       ),
     ),
     
-    // AppBar Theme
     appBarTheme: AppBarTheme(
       backgroundColor: primaryColor,
       foregroundColor: textWhite,
@@ -97,7 +91,6 @@ class AppTheme {
       ),
     ),
     
-    // Button Themes
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         backgroundColor: primaryColor,
@@ -139,7 +132,6 @@ class AppTheme {
       ),
     ),
     
-    // Input Theme
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
       fillColor: Colors.white,
@@ -170,7 +162,6 @@ class AppTheme {
       ),
     ),
     
-    // Card Theme
     cardTheme: CardThemeData(
       color: cardColor,
       elevation: 2,
@@ -180,27 +171,25 @@ class AppTheme {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
     ),
     
-    // Bottom Navigation
     bottomNavigationBarTheme: const BottomNavigationBarThemeData(
       backgroundColor: surfaceColor,
       selectedItemColor: primaryColor,
       unselectedItemColor: textSecondary,
       type: BottomNavigationBarType.fixed,
       elevation: 8,
+      showSelectedLabels: true,
+      showUnselectedLabels: true,
     ),
   );
   
-  // Spacing
   static const double paddingSmall = 8.0;
   static const double paddingMedium = 16.0;
   static const double paddingLarge = 24.0;
   
-  // Border Radius
   static const double radiusSmall = 8.0;
   static const double radiusMedium = 12.0;
   static const double radiusLarge = 16.0;
   
-  // Shadows
   static List<BoxShadow> cardShadow = [
     BoxShadow(
       color: Colors.black.withAlpha(20),

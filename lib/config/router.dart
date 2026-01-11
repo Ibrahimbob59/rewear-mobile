@@ -3,13 +3,14 @@ import 'package:go_router/go_router.dart';
 import '../screens/auth/login_screen.dart';
 import '../screens/auth/register_screen.dart';
 import '../screens/auth/otp_verification_screen.dart';
+import '../screens/main/main_scaffold.dart';
 import '../screens/home/home_screen.dart';
+import '../screens/cart/cart_screen.dart';
+import '../screens/orders/orders_screen.dart';
 import '../screens/profile/profile_screen.dart';
 import '../screens/items/item_detail_screen.dart';
 import '../screens/items/create_item_screen.dart';
-import '../screens/cart/cart_screen.dart';
 import '../screens/cart/checkout_screen.dart';
-import '../screens/orders/orders_screen.dart';
 import '../screens/orders/order_detail_screen.dart';
 import '../screens/favorites/favorites_screen.dart';
 import '../screens/search/search_screen.dart';
@@ -30,20 +31,34 @@ import '../screens/charity/charity_claimed_screen.dart';
 import '../screens/charity/charity_donate_screen.dart';
 import '../services/storage_service.dart';
 
+final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
+final GlobalKey<NavigatorState> _shellNavigatorKey = GlobalKey<NavigatorState>();
+
 class AppRouter {
   static final StorageService _storageService = StorageService();
   
+  static int _getIndexFromLocation(String location) {
+    if (location.startsWith('/cart')) {
+      return 1;
+    } else if (location.startsWith('/orders')) {
+      return 2;
+    } else if (location.startsWith('/profile')) {
+      return 3;
+    }
+    return 0;
+  }
+  
   static final GoRouter router = GoRouter(
-    initialLocation: '/home',
+    navigatorKey: _rootNavigatorKey,
+    initialLocation: '/',
     redirect: (BuildContext context, GoRouterState state) async {
       await _storageService.init();
       final bool isLoggedIn = await _storageService.hasAccessToken();
       final String location = state.matchedLocation;
 
-      // Routes that absolutely need authentication
       final bool needsAuth = location == '/create-item' ||
-                             location == '/orders' ||
-                             location.startsWith('/orders/') ||
+                             location.startsWith('/checkout') ||
+                             (location.startsWith('/orders/') && location != '/orders') ||
                              location.startsWith('/profile/edit') ||
                              location == '/profile/change-password' ||
                              location == '/selling' ||
@@ -55,12 +70,53 @@ class AppRouter {
       }
 
       if (isLoggedIn && (location == '/login' || location == '/register')) {
-        return '/home';
+        return '/';
       }
 
       return null;
     },
     routes: [
+      ShellRoute(
+        navigatorKey: _shellNavigatorKey,
+        builder: (context, state, child) {
+          final index = _getIndexFromLocation(state.matchedLocation);
+          return MainScaffold(
+            currentIndex: index,
+            child: child,
+          );
+        },
+        routes: [
+          GoRoute(
+            path: '/',
+            name: 'home',
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: HomeScreen(),
+            ),
+          ),
+          GoRoute(
+            path: '/cart',
+            name: 'cart',
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: CartScreen(),
+            ),
+          ),
+          GoRoute(
+            path: '/orders',
+            name: 'orders',
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: OrdersScreen(),
+            ),
+          ),
+          GoRoute(
+            path: '/profile',
+            name: 'profile',
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: ProfileScreen(),
+            ),
+          ),
+        ],
+      ),
+      
       GoRoute(path: '/login', name: 'login', builder: (context, state) => const LoginScreen()),
       GoRoute(path: '/register', name: 'register', builder: (context, state) => const RegisterScreen()),
       GoRoute(
@@ -71,9 +127,6 @@ class AppRouter {
           return OTPVerificationScreen(email: email);
         },
       ),
-      GoRoute(path: '/home', name: 'home', builder: (context, state) => const HomeScreen()),
-      GoRoute(path: '/', redirect: (context, state) => '/home'),
-      GoRoute(path: '/profile', name: 'profile', builder: (context, state) => const ProfileScreen()),
       GoRoute(path: '/profile/edit', builder: (context, state) => const ProfileEditScreen()),
       GoRoute(path: '/profile/change-password', builder: (context, state) => const ChangePasswordScreen()),
       GoRoute(path: '/profile/deactivate', builder: (context, state) => const DeactivateAccountScreen()),
@@ -89,9 +142,7 @@ class AppRouter {
       GoRoute(path: '/create-item', builder: (context, state) => const CreateItemScreen()),
       GoRoute(path: '/search', builder: (context, state) => const SearchScreen()),
       GoRoute(path: '/selling', builder: (context, state) => const SellingScreen()),
-      GoRoute(path: '/cart', builder: (context, state) => const CartScreen()),
       GoRoute(path: '/checkout', builder: (context, state) => const CheckoutScreen()),
-      GoRoute(path: '/orders', builder: (context, state) => const OrdersScreen()),
       GoRoute(
         path: '/orders/:id',
         builder: (context, state) {
@@ -132,7 +183,7 @@ class AppRouter {
             Text('Page not found: ${state.matchedLocation}'),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: () => context.go('/home'),
+              onPressed: () => context.go('/'),
               child: const Text('Go Home'),
             ),
           ],
