@@ -160,13 +160,6 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () {
-              context.push('/search');
-            },
-          ),
-          
-          IconButton(
             icon: const Icon(Icons.favorite_border),
             onPressed: () {
               context.push('/favorites');
@@ -184,7 +177,36 @@ class _HomeScreenState extends State<HomeScreen> {
 
       body: Column(
         children: [
-          const _StatsBar(),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            color: Colors.white,
+            child: GestureDetector(
+              onTap: () {
+                context.push('/search');
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey[300]!),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.search, color: Colors.grey[500]),
+                    const SizedBox(width: 12),
+                    Text(
+                      'Search for items...',
+                      style: TextStyle(
+                        color: Colors.grey[500],
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
           
           if (user != null)
             Container(
@@ -208,7 +230,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Hello, ${user.name.split(' ').first}! 👋',
+                          'Hello, ${user.name.split(' ').first}!',
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -372,6 +394,8 @@ class _HomeScreenState extends State<HomeScreen> {
               },
             ),
           ),
+          
+          const _StatsBar(),
         ],
       ),
 
@@ -447,8 +471,7 @@ class _StatsBarState extends State<_StatsBar> {
   Widget build(BuildContext context) {
     if (_isLoading) {
       return Container(
-        height: 80,
-        color: Colors.green[50],
+        padding: const EdgeInsets.all(16),
         child: const Center(
           child: SizedBox(
             height: 20,
@@ -460,29 +483,31 @@ class _StatsBarState extends State<_StatsBar> {
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.green[400]!, Colors.green[600]!],
+        color: Colors.grey[50],
+        border: Border(
+          top: BorderSide(color: Colors.grey[200]!),
         ),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _StatBadge(
-            icon: Icons.shopping_bag,
-            label: 'Items Sold',
-            value: '${_stats!['items_sold']}',
+          Expanded(
+            child: _StatCard(
+              icon: Icons.shopping_bag_outlined,
+              label: 'Items Sold',
+              value: '${_stats!['items_sold']}',
+              color: const Color(0xFF2A9D8F),
+            ),
           ),
-          Container(
-            height: 40,
-            width: 1,
-            color: Colors.white.withOpacity(0.3),
-          ),
-          _StatBadge(
-            icon: Icons.favorite,
-            label: 'Donations',
-            value: '${_stats!['total_donations']}',
+          const SizedBox(width: 16),
+          Expanded(
+            child: _StatCard(
+              icon: Icons.volunteer_activism_outlined,
+              label: 'Donations',
+              value: '${_stats!['total_donations']}',
+              color: const Color(0xFFE76F51),
+            ),
           ),
         ],
       ),
@@ -490,40 +515,64 @@ class _StatsBarState extends State<_StatsBar> {
   }
 }
 
-class _StatBadge extends StatelessWidget {
+class _StatCard extends StatelessWidget {
   final IconData icon;
   final String label;
   final String value;
+  final Color color;
 
-  const _StatBadge({
+  const _StatCard({
     required this.icon,
     required this.label,
     required this.value,
+    required this.color,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, color: Colors.white, size: 28),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: color, size: 24),
           ),
-        ),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 11,
-            color: Colors.white.withOpacity(0.9),
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
+              ),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[600],
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
