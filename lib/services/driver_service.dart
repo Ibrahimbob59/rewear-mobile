@@ -7,7 +7,6 @@ class DriverService {
 
   DriverService(this._dio);
 
-  // Apply to become a driver
   Future<Driver> applyAsDriver({
     required String vehicleType,
     required String vehicleNumber,
@@ -30,7 +29,7 @@ class DriverService {
         ),
       });
 
-      final response = await _dio.post('/driver/apply', data: formData);
+      final response = await _dio.post('/driver-applications', data: formData);
       return Driver.fromJson(response.data['data']);
     } catch (e) {
       print('Error applying as driver: $e');
@@ -38,49 +37,75 @@ class DriverService {
     }
   }
 
-  // Get driver profile
-  Future<Driver> getDriverProfile() async {
+  Future<Map<String, dynamic>?> getMyApplication() async {
     try {
-      final response = await _dio.get('/driver/profile');
-      return Driver.fromJson(response.data['data']);
-    } catch (e) {
-      print('Error getting driver profile: $e');
-      rethrow;
-    }
-  }
-
-  // Toggle driver availability
-  Future<Driver> toggleAvailability(bool isAvailable) async {
-    try {
-      final response = await _dio.put('/driver/availability', data: {
-        'is_available': isAvailable,
-      });
-      return Driver.fromJson(response.data['data']);
-    } catch (e) {
-      print('Error toggling availability: $e');
-      rethrow;
-    }
-  }
-
-  // Get driver stats
-  Future<Map<String, dynamic>> getDriverStats() async {
-    try {
-      final response = await _dio.get('/driver/stats');
+      final response = await _dio.get('/driver-applications/my-application');
       return response.data['data'];
     } catch (e) {
-      print('Error getting driver stats: $e');
+      print('Error getting my application: $e');
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>> checkEligibility() async {
+    try {
+      final response = await _dio.get('/driver-applications/eligibility');
+      return response.data['data'];
+    } catch (e) {
+      print('Error checking eligibility: $e');
       rethrow;
     }
   }
 
-  // Get driver earnings
-  Future<Map<String, dynamic>> getEarnings({
-    String? period, // 'today', 'week', 'month', 'all'
-  }) async {
+  Future<Map<String, dynamic>> getDashboard() async {
     try {
-      final response = await _dio.get('/driver/earnings', queryParameters: {
-        if (period != null) 'period': period,
-      });
+      final response = await _dio.get('/driver/dashboard');
+      return response.data['data'];
+    } catch (e) {
+      print('Error getting driver dashboard: $e');
+      rethrow;
+    }
+  }
+
+  Future<List<dynamic>> getMyDeliveries({String? status}) async {
+    try {
+      final queryParams = <String, dynamic>{};
+      if (status != null) queryParams['status'] = status;
+      
+      final response = await _dio.get('/driver/deliveries', queryParameters: queryParams);
+      return response.data['data'] as List<dynamic>;
+    } catch (e) {
+      print('Error getting my deliveries: $e');
+      rethrow;
+    }
+  }
+
+  Future<List<dynamic>> getAvailableDeliveries() async {
+    try {
+      final response = await _dio.get('/driver/available-deliveries');
+      return response.data['data'] as List<dynamic>;
+    } catch (e) {
+      print('Error getting available deliveries: $e');
+      rethrow;
+    }
+  }
+
+  Future<Map<String, dynamic>> acceptDelivery(int deliveryId) async {
+    try {
+      final response = await _dio.post('/driver/accept-delivery/$deliveryId');
+      return response.data['data'];
+    } catch (e) {
+      print('Error accepting delivery: $e');
+      rethrow;
+    }
+  }
+
+  Future<Map<String, dynamic>> getEarnings({String? period}) async {
+    try {
+      final queryParams = <String, dynamic>{};
+      if (period != null) queryParams['period'] = period;
+      
+      final response = await _dio.get('/driver/earnings', queryParameters: queryParams);
       return response.data['data'];
     } catch (e) {
       print('Error getting earnings: $e');

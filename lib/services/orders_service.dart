@@ -70,4 +70,14 @@ class OrdersService {
       throw Exception('Failed to cancel order: $e');
     }
   }
+
+  // Confirm order (seller confirms)
+  Future<Order> confirmOrder(int id) async {
+    try {
+      final response = await _dio.post('/orders/$id/confirm');
+      return Order.fromJson(response.data['data'] as Map<String, dynamic>);
+    } catch (e) {
+      throw Exception('Failed to confirm order: $e');
+    }
+  }
 }

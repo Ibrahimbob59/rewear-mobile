@@ -6,45 +6,30 @@ class CharityService {
 
   CharityService(this._dio);
 
-  // Get charity profile
-  Future<Charity> getCharityProfile() async {
+  Future<Map<String, dynamic>> getDashboard() async {
     try {
-      final response = await _dio.get('/charity/profile');
-      return Charity.fromJson(response.data['data']);
+      final response = await _dio.get('/charity/dashboard');
+      return response.data['data'];
     } catch (e) {
-      print('Error getting charity profile: $e');
+      print('Error getting charity dashboard: $e');
       rethrow;
     }
   }
 
-  // Get pending donations
-  Future<List<DonatedItem>> getPendingDonations() async {
+  Future<List<DonatedItem>> getAvailableDonations() async {
     try {
-      final response = await _dio.get('/charity/donations/pending');
-      final List<dynamic> data = response.data['data'];
+      final response = await _dio.get('/charity/available-donations');
+      final List<dynamic> data = response.data['data'] ?? [];
       return data.map((json) => DonatedItem.fromJson(json)).toList();
     } catch (e) {
-      print('Error getting pending donations: $e');
+      print('Error getting available donations: $e');
       rethrow;
     }
   }
 
-  // Get accepted donations
-  Future<List<DonatedItem>> getAcceptedDonations() async {
+  Future<DonatedItem> acceptDonation(int itemId) async {
     try {
-      final response = await _dio.get('/charity/donations/accepted');
-      final List<dynamic> data = response.data['data'];
-      return data.map((json) => DonatedItem.fromJson(json)).toList();
-    } catch (e) {
-      print('Error getting accepted donations: $e');
-      rethrow;
-    }
-  }
-
-  // Accept donation
-  Future<DonatedItem> acceptDonation(int donationId) async {
-    try {
-      final response = await _dio.post('/charity/donations/$donationId/accept');
+      final response = await _dio.post('/charity/accept-donation/$itemId');
       return DonatedItem.fromJson(response.data['data']);
     } catch (e) {
       print('Error accepting donation: $e');
@@ -52,25 +37,43 @@ class CharityService {
     }
   }
 
-  // Reject donation
-  Future<void> rejectDonation(int donationId, {String? reason}) async {
+  Future<List<DonatedItem>> getMyDonations() async {
     try {
-      await _dio.post('/charity/donations/$donationId/reject', data: {
-        if (reason != null) 'reason': reason,
-      });
+      final response = await _dio.get('/charity/my-donations');
+      final List<dynamic> data = response.data['data'] ?? [];
+      return data.map((json) => DonatedItem.fromJson(json)).toList();
     } catch (e) {
-      print('Error rejecting donation: $e');
+      print('Error getting my donations: $e');
       rethrow;
     }
   }
 
-  // Get impact stats
+  Future<void> markDistributed(int orderId) async {
+    try {
+      await _dio.post('/charity/mark-distributed/$orderId');
+    } catch (e) {
+      print('Error marking distributed: $e');
+      rethrow;
+    }
+  }
+
   Future<Map<String, dynamic>> getImpactStats() async {
     try {
-      final response = await _dio.get('/charity/impact');
+      final response = await _dio.get('/charity/impact-stats');
       return response.data['data'];
     } catch (e) {
       print('Error getting impact stats: $e');
+      rethrow;
+    }
+  }
+
+  Future<List<DonatedItem>> getRecommendedDonations() async {
+    try {
+      final response = await _dio.get('/charity/recommended-donations');
+      final List<dynamic> data = response.data['data'] ?? [];
+      return data.map((json) => DonatedItem.fromJson(json)).toList();
+    } catch (e) {
+      print('Error getting recommended donations: $e');
       rethrow;
     }
   }

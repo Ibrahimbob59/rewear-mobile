@@ -31,8 +31,9 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
   // Initialize Dio
+  // Use 10.0.2.2 for Android emulator (maps to host machine's localhost)
   final dio = Dio(BaseOptions(
-    baseUrl: 'http://localhost:8000/api', // ⬅️ CHANGE TO YOUR BACKEND URL
+    baseUrl: 'http://10.0.2.2:8000/api',
     connectTimeout: const Duration(seconds: 30),
     receiveTimeout: const Duration(seconds: 30),
   ));
