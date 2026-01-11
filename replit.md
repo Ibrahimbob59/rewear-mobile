@@ -60,6 +60,14 @@ flutter build web --release
 The app expects a backend API at `http://localhost:8000/api`. The backend is not included in this project. To use the app fully, you'll need to configure the API endpoint in `lib/main.dart`.
 
 ## Recent Changes
+- January 11, 2026: API & UI Overhaul for Android
+  - Fixed all API endpoint mismatches with Laravel backend (driver, charity, orders services)
+  - Updated base URL to 10.0.2.2:8000 for Android emulator compatibility
+  - Implemented bottom navigation bar using ShellRoute pattern (Home, Cart, Orders, Profile)
+  - Redesigned Profile screen with live statistics connected to real provider data
+  - Updated theme with #2A9D8F primary color and #21867A dark variant
+  - Fixed ShellRoute index calculation for nested routes and deep links
+  
 - January 11, 2026: Initial Replit environment setup
   - Installed Flutter via Nix
   - Built Flutter web release
