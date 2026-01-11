@@ -28,7 +28,7 @@ class _CharityDonateScreenState extends State<CharityDonateScreen> {
   Condition? _selectedCondition;
   Gender? _selectedGender;
   
-  List<File> _images = [];
+  final List<File> _images = [];
   bool _isSubmitting = false;
 
   @override
@@ -43,7 +43,7 @@ class _CharityDonateScreenState extends State<CharityDonateScreen> {
     final imageUploadService = ImageUploadService();
     final pickedImages = await imageUploadService.pickMultipleImages(maxImages: 6 - _images.length);
     
-    if (pickedImages != null && pickedImages.isNotEmpty) {
+    if (pickedImages.isNotEmpty) {
       setState(() {
         _images.addAll(pickedImages);
       });

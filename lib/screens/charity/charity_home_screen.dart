@@ -91,7 +91,7 @@ class CharityHomeScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            Row(
+            const Row(
               children: [
                 Expanded(
                   child: _StatCard(
@@ -101,7 +101,7 @@ class CharityHomeScreen extends StatelessWidget {
                     color: Colors.orange,
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: 12),
                 Expanded(
                   child: _StatCard(
                     icon: Icons.people_outline,

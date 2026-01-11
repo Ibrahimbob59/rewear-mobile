@@ -3,11 +3,9 @@ import 'package:flutter/material.dart';
 enum DeliveryStatus {
   pending('pending', 'Pending', 'Waiting for driver', Colors.orange),
   assigned('assigned', 'Assigned', 'Driver assigned', Colors.blue),
-  pickedUp('picked_up', 'Picked Up', 'Item picked up', Colors.purple),
   inTransit('in_transit', 'In Transit', 'On the way', Colors.indigo),
   delivered('delivered', 'Delivered', 'Successfully delivered', Colors.green),
-  failed('failed', 'Failed', 'Delivery failed', Colors.red),
-  cancelled('cancelled', 'Cancelled', 'Delivery cancelled', Colors.grey);
+  cancelled('cancelled', 'Cancelled', 'Delivery cancelled', Colors.red);
 
   final String value;
   final String displayName;
@@ -27,11 +25,13 @@ enum DeliveryStatus {
 
   bool get isActive => 
       this == DeliveryStatus.assigned || 
-      this == DeliveryStatus.pickedUp || 
       this == DeliveryStatus.inTransit;
 
   bool get isCompleted => 
       this == DeliveryStatus.delivered || 
-      this == DeliveryStatus.failed || 
       this == DeliveryStatus.cancelled;
+      
+  bool get canBeCancelled =>
+      this == DeliveryStatus.pending ||
+      this == DeliveryStatus.assigned;
 }

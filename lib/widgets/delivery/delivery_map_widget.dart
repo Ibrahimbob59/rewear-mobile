@@ -19,140 +19,180 @@ class DeliveryMapWidget extends StatefulWidget {
 
 class _DeliveryMapWidgetState extends State<DeliveryMapWidget> {
   GoogleMapController? _mapController;
-  final Set<Marker> _markers = {};
+  Set<Marker> _markers = {};
 
   @override
   void initState() {
     super.initState();
-    _setupMarkers();
+    _updateMarkers();
   }
 
   @override
   void didUpdateWidget(DeliveryMapWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.currentPosition != widget.currentPosition) {
-      _setupMarkers();
+    if (widget.currentPosition != oldWidget.currentPosition ||
+        widget.delivery != oldWidget.delivery) {
+      _updateMarkers();
     }
   }
 
-  void _setupMarkers() {
-    _markers.clear();
+  void _updateMarkers() {
+    final markers = <Marker>{};
 
-    // Pickup marker
-    _markers.add(
-      Marker(
-        markerId: const MarkerId('pickup'),
-        position: LatLng(
-          widget.delivery.pickupLatitude,
-          widget.delivery.pickupLongitude,
-        ),
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
-        infoWindow: const InfoWindow(title: 'Pickup Location'),
-      ),
-    );
-
-    // Delivery marker
-    _markers.add(
-      Marker(
-        markerId: const MarkerId('delivery'),
-        position: LatLng(
-          widget.delivery.deliveryLatitude,
-          widget.delivery.deliveryLongitude,
-        ),
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
-        infoWindow: const InfoWindow(title: 'Delivery Location'),
-      ),
-    );
-
-    // Current position marker (driver)
-    if (widget.currentPosition != null) {
-      _markers.add(
+    // Pickup marker - ✅ FIXED null handling
+    if (widget.delivery.pickupLatitude != null && 
+        widget.delivery.pickupLongitude != null) {
+      markers.add(
         Marker(
-          markerId: const MarkerId('driver'),
+          markerId: const MarkerId('pickup'),
           position: LatLng(
-            widget.currentPosition!.latitude,
-            widget.currentPosition!.longitude,
+            widget.delivery.pickupLatitude!,  // ✅ FIXED
+            widget.delivery.pickupLongitude!, // ✅ FIXED
           ),
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
-          infoWindow: const InfoWindow(title: 'Driver Location'),
+          infoWindow: InfoWindow(
+            title: 'Pickup Location',
+            snippet: widget.delivery.pickupAddress ?? 'Pickup point',
+          ),
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
         ),
       );
     }
 
-    if (mounted) setState(() {});
+    // Delivery marker - ✅ FIXED null handling
+    if (widget.delivery.deliveryLatitude != null && 
+        widget.delivery.deliveryLongitude != null) {
+      markers.add(
+        Marker(
+          markerId: const MarkerId('delivery'),
+          position: LatLng(
+            widget.delivery.deliveryLatitude!,  // ✅ FIXED
+            widget.delivery.deliveryLongitude!, // ✅ FIXED
+          ),
+          infoWindow: InfoWindow(
+            title: 'Delivery Location',
+            snippet: widget.delivery.deliveryAddress ?? 'Delivery point',
+          ),
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+        ),
+      );
+    }
+
+    // Current position marker - ✅ FIXED null handling
+    if (widget.currentPosition != null) {
+      markers.add(
+        Marker(
+          markerId: const MarkerId('current'),
+          position: LatLng(
+            widget.currentPosition!.latitude,  // ✅ FIXED
+            widget.currentPosition!.longitude, // ✅ FIXED
+          ),
+          infoWindow: const InfoWindow(
+            title: 'Your Location',
+          ),
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
+        ),
+      );
+    }
+
+    setState(() {
+      _markers = markers;
+    });
+  }
+
+  LatLng _getCenter() {
+    // ✅ FIXED - Proper null handling
+    if (widget.currentPosition != null) {
+      return LatLng(
+        widget.currentPosition!.latitude,
+        widget.currentPosition!.longitude,
+      );
+    }
+
+    // If picked up, center on delivery location
+    if (widget.delivery.isPickedUp && 
+        widget.delivery.deliveryLatitude != null &&
+        widget.delivery.deliveryLongitude != null) {
+      return LatLng(
+        widget.delivery.deliveryLatitude!,
+        widget.delivery.deliveryLongitude!,
+      );
+    }
+
+    // Otherwise center on pickup location
+    if (widget.delivery.pickupLatitude != null &&
+        widget.delivery.pickupLongitude != null) {
+      return LatLng(
+        widget.delivery.pickupLatitude!,
+        widget.delivery.pickupLongitude!,
+      );
+    }
+
+    // Default to Beirut if no coordinates
+    return const LatLng(33.8938, 35.5018);
+  }
+
+  double _getZoom() {
+    // ✅ FIXED - Proper null handling
+    if (_markers.length > 1 &&
+        widget.delivery.pickupLatitude != null &&
+        widget.delivery.pickupLongitude != null &&
+        widget.delivery.deliveryLatitude != null &&
+        widget.delivery.deliveryLongitude != null) {
+      
+      final pickupLat = widget.delivery.pickupLatitude!;
+      final pickupLng = widget.delivery.pickupLongitude!;
+      final deliveryLat = widget.delivery.deliveryLatitude!;
+      final deliveryLng = widget.delivery.deliveryLongitude!;
+
+      // Calculate bounds
+      final minLat = pickupLat < deliveryLat ? pickupLat : deliveryLat;
+      final maxLat = pickupLat > deliveryLat ? pickupLat : deliveryLat;
+      final minLng = pickupLng < deliveryLng ? pickupLng : deliveryLng;
+      final maxLng = pickupLng > deliveryLng ? pickupLng : deliveryLng;
+
+      final latDiff = maxLat - minLat;
+      final lngDiff = maxLng - minLng;
+      final maxDiff = latDiff > lngDiff ? latDiff : lngDiff;
+
+      if (maxDiff < 0.01) return 14.0;
+      if (maxDiff < 0.05) return 12.0;
+      if (maxDiff < 0.1) return 11.0;
+      return 10.0;
+    }
+
+    return 13.0;
   }
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 300,
-      child: GoogleMap(
-        initialCameraPosition: CameraPosition(
-          target: LatLng(
-            widget.delivery.pickupLatitude,
-            widget.delivery.pickupLongitude,
+    return Container(
+      height: 250,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),  // ✅ FIXED deprecation
+            blurRadius: 10,
+            offset: const Offset(0, 2),
           ),
-          zoom: 13,
-        ),
-        markers: _markers,
-        onMapCreated: (controller) {
-          _mapController = controller;
-          _fitMapToMarkers();
-        },
-        myLocationEnabled: true,
-        myLocationButtonEnabled: true,
+        ],
       ),
-    );
-  }
-
-  void _fitMapToMarkers() {
-    if (_mapController == null) return;
-
-    final bounds = _calculateBounds();
-    _mapController!.animateCamera(
-      CameraUpdate.newLatLngBounds(bounds, 50),
-    );
-  }
-
-  LatLngBounds _calculateBounds() {
-    double minLat = widget.delivery.pickupLatitude;
-    double maxLat = widget.delivery.pickupLatitude;
-    double minLng = widget.delivery.pickupLongitude;
-    double maxLng = widget.delivery.pickupLongitude;
-
-    // Include delivery location
-    if (widget.delivery.deliveryLatitude < minLat) {
-      minLat = widget.delivery.deliveryLatitude;
-    }
-    if (widget.delivery.deliveryLatitude > maxLat) {
-      maxLat = widget.delivery.deliveryLatitude;
-    }
-    if (widget.delivery.deliveryLongitude < minLng) {
-      minLng = widget.delivery.deliveryLongitude;
-    }
-    if (widget.delivery.deliveryLongitude > maxLng) {
-      maxLng = widget.delivery.deliveryLongitude;
-    }
-
-    // Include current position if available
-    if (widget.currentPosition != null) {
-      if (widget.currentPosition!.latitude < minLat) {
-        minLat = widget.currentPosition!.latitude;
-      }
-      if (widget.currentPosition!.latitude > maxLat) {
-        maxLat = widget.currentPosition!.latitude;
-      }
-      if (widget.currentPosition!.longitude < minLng) {
-        minLng = widget.currentPosition!.longitude;
-      }
-      if (widget.currentPosition!.longitude > maxLng) {
-        maxLng = widget.currentPosition!.longitude;
-      }
-    }
-
-    return LatLngBounds(
-      southwest: LatLng(minLat, minLng),
-      northeast: LatLng(maxLat, maxLng),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: GoogleMap(
+          initialCameraPosition: CameraPosition(
+            target: _getCenter(),
+            zoom: _getZoom(),
+          ),
+          markers: _markers,
+          myLocationEnabled: true,
+          myLocationButtonEnabled: true,
+          mapType: MapType.normal,
+          onMapCreated: (controller) {
+            _mapController = controller;
+          },
+        ),
+      ),
     );
   }
 

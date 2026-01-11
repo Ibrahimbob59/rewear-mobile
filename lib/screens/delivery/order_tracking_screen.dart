@@ -55,29 +55,48 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
             return const Center(child: Text('Delivery information not available'));
           }
 
-          return Column(
-            children: [
-              // Map
-              if (delivery.driver != null)
-                DeliveryMapWidget(
-                  delivery: delivery,
-                  currentPosition: null, // Driver's current position from backend
+          return SingleChildScrollView(
+            child: Column(
+              children: [
+                // Map
+                if (delivery.driver != null && 
+                    delivery.pickupLatitude != null && 
+                    delivery.pickupLongitude != null)
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: DeliveryMapWidget(
+                      delivery: delivery,
+                      currentPosition: null,
+                    ),
+                  ),
+
+                // Status Stepper
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.05), // ✅ FIXED deprecation
+                          blurRadius: 10,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: DeliveryStatusStepper(delivery: delivery),
+                  ),
                 ),
 
-              // Delivery Info
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Status Stepper
-                      DeliveryStatusStepper(delivery: delivery),
-
-                      const SizedBox(height: 24),
-
-                      // Driver Info (if assigned)
-                      if (delivery.driver != null) ...[
+                // Driver Info (if assigned)
+                if (delivery.driver != null) ...[
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
                         const Text(
                           'Your Driver',
                           style: TextStyle(
@@ -93,7 +112,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                             borderRadius: BorderRadius.circular(12),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
+                                color: Colors.black.withValues(alpha: 0.05), // ✅ FIXED deprecation
                                 blurRadius: 10,
                                 offset: const Offset(0, 2),
                               ),
@@ -103,15 +122,13 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                             children: [
                               CircleAvatar(
                                 radius: 30,
-                                backgroundColor: Theme.of(context).primaryColor,
-                                child: Text(
-                                  delivery.driver!.name[0].toUpperCase(),
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
+                                backgroundColor: Colors.blue[100],
+                                backgroundImage: delivery.driver!.profilePicture != null
+                                    ? NetworkImage(delivery.driver!.profilePicture!)
+                                    : null,
+                                child: delivery.driver!.profilePicture == null
+                                    ? const Icon(Icons.person, size: 30)
+                                    : null,
                               ),
                               const SizedBox(width: 16),
                               Expanded(
@@ -122,138 +139,150 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                                       delivery.driver!.name,
                                       style: const TextStyle(
                                         fontSize: 16,
-                                        fontWeight: FontWeight.w600,
+                                        fontWeight: FontWeight.bold,
                                       ),
                                     ),
                                     const SizedBox(height: 4),
                                     if (delivery.driver!.vehicleType != null)
                                       Text(
-                                        '${delivery.driver!.vehicleType} • ${delivery.driver!.vehicleNumber ?? ""}',
+                                        delivery.driver!.vehicleType!,
                                         style: TextStyle(
-                                          fontSize: 13,
+                                          fontSize: 14,
                                           color: Colors.grey[600],
                                         ),
                                       ),
                                     if (delivery.driver!.rating != null)
                                       Row(
                                         children: [
-                                          const Icon(
-                                            Icons.star,
-                                            size: 14,
-                                            color: Colors.amber,
-                                          ),
+                                          const Icon(Icons.star, size: 16, color: Colors.amber),
                                           const SizedBox(width: 4),
                                           Text(
                                             delivery.driver!.rating!.toStringAsFixed(1),
-                                            style: const TextStyle(fontSize: 13),
+                                            style: const TextStyle(fontSize: 14),
                                           ),
                                         ],
                                       ),
                                   ],
                                 ),
                               ),
-                              IconButton(
-                                onPressed: () => _callDriver(delivery.driver!.phone),
-                                icon: const Icon(Icons.phone),
-                                color: Theme.of(context).primaryColor,
-                                style: IconButton.styleFrom(
-                                  backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
+                              if (delivery.driver!.phone != null)
+                                IconButton(
+                                  onPressed: () => _callDriver(delivery.driver!.phone!), // ✅ FIXED
+                                  icon: const Icon(Icons.phone),
+                                  style: IconButton.styleFrom(
+                                    backgroundColor: Colors.green[50],
+                                    foregroundColor: Colors.green[700],
+                                  ),
                                 ),
-                              ),
                             ],
                           ),
                         ),
-                        const SizedBox(height: 24),
                       ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
 
-                      // Delivery Details
-                      const Text(
-                        'Delivery Details',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                // Delivery Info
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.05), // ✅ FIXED deprecation
+                          blurRadius: 10,
+                          offset: const Offset(0, 2),
                         ),
-                      ),
-                      const SizedBox(height: 12),
-                      
-                      _buildInfoCard(
-                        title: 'Pickup Address',
-                        content: delivery.pickupAddress,
-                        icon: Icons.store,
-                      ),
-                      
-                      const SizedBox(height: 12),
-                      
-                      _buildInfoCard(
-                        title: 'Delivery Address',
-                        content: delivery.deliveryAddress,
-                        icon: Icons.home,
-                      ),
-
-                      const SizedBox(height: 12),
-
-                      _buildInfoCard(
-                        title: 'Delivery Fee',
-                        content: delivery.deliveryFeeDisplay,
-                        icon: Icons.local_shipping,
-                      ),
-                    ],
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Delivery Details',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        _buildInfoRow(
+                          icon: Icons.location_on,
+                          label: 'Pickup',
+                          value: delivery.pickupAddress ?? 'N/A', // ✅ FIXED
+                        ),
+                        const Divider(height: 24),
+                        _buildInfoRow(
+                          icon: Icons.home,
+                          label: 'Delivery',
+                          value: delivery.deliveryAddress ?? 'N/A', // ✅ FIXED
+                        ),
+                        if (delivery.distanceKm != null) ...[
+                          const Divider(height: 24),
+                          _buildInfoRow(
+                            icon: Icons.straighten,
+                            label: 'Distance',
+                            value: '${delivery.distanceKm!.toStringAsFixed(1)} km',
+                          ),
+                        ],
+                        const Divider(height: 24),
+                        _buildInfoRow(
+                          icon: Icons.attach_money,
+                          label: 'Delivery Fee',
+                          value: delivery.deliveryFeeDisplay,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
+
+                const SizedBox(height: 32),
+              ],
+            ),
           );
         },
       ),
     );
   }
 
-  Widget _buildInfoCard({
-    required String title,
-    required String content,
+  Widget _buildInfoRow({
     required IconData icon,
+    required String label,
+    required String value,
   }) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: Theme.of(context).primaryColor),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.grey[600],
-                  ),
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 20, color: Colors.grey[600]),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[600],
+                  fontWeight: FontWeight.w500,
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  content,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                  ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

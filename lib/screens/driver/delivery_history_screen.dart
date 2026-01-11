@@ -186,7 +186,7 @@ class _DeliveryHistoryScreenState extends State<DeliveryHistoryScreen> {
                                 const SizedBox(width: 4),
                                 Expanded(
                                   child: Text(
-                                    delivery.pickupAddress,
+                                    delivery.pickupAddress ?? 'Pickup address', // ✅ FIXED
                                     style: TextStyle(
                                       fontSize: 13,
                                       color: Colors.grey[600],
@@ -207,7 +207,7 @@ class _DeliveryHistoryScreenState extends State<DeliveryHistoryScreen> {
                                 const SizedBox(width: 4),
                                 Expanded(
                                   child: Text(
-                                    delivery.deliveryAddress,
+                                    delivery.deliveryAddress ?? 'Delivery address', // ✅ FIXED
                                     style: TextStyle(
                                       fontSize: 13,
                                       color: Colors.grey[600],

@@ -10,162 +10,118 @@ class DeliveryStatusStepper extends StatelessWidget {
     required this.delivery,
   });
 
-  int get _currentStep {
-    switch (delivery.status) {
-      case 'pending':
-      case 'assigned':
-        return 0;
-      case 'picked_up':
-        return 1;
-      case 'in_transit':
-        return 2;
-      case 'delivered':
-        return 3;
-      default:
-        return 0;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Delivery Status',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 16),
-          _buildStatusItem(
-            step: 0,
-            title: 'Order Assigned',
-            subtitle: 'Driver assigned to delivery',
-            icon: Icons.assignment,
-            isCompleted: _currentStep >= 0,
-            isActive: _currentStep == 0,
-          ),
-          _buildStatusItem(
-            step: 1,
-            title: 'Picked Up',
-            subtitle: delivery.pickupTime != null
-                ? DateFormat('MMM dd, hh:mm a').format(delivery.pickupTime!)
-                : 'Pending pickup',
-            icon: Icons.store,
-            isCompleted: _currentStep >= 1,
-            isActive: _currentStep == 1,
-          ),
-          _buildStatusItem(
-            step: 2,
-            title: 'In Transit',
-            subtitle: 'On the way to delivery',
-            icon: Icons.local_shipping,
-            isCompleted: _currentStep >= 2,
-            isActive: _currentStep == 2,
-          ),
-          _buildStatusItem(
-            step: 3,
-            title: 'Delivered',
-            subtitle: delivery.deliveryTime != null
-                ? DateFormat('MMM dd, hh:mm a').format(delivery.deliveryTime!)
-                : 'Pending delivery',
-            icon: Icons.check_circle,
-            isCompleted: _currentStep >= 3,
-            isActive: _currentStep == 3,
-            isLast: true,
-          ),
-        ],
-      ),
+    return Column(
+      children: [
+        _buildStep(
+          context: context,
+          title: 'Driver Assigned',
+          subtitle: delivery.assignedAt != null
+              ? DateFormat('MMM d, h:mm a').format(delivery.assignedAt!)
+              : null,
+          isCompleted: delivery.assignedAt != null,
+          isActive: delivery.status == 'assigned',
+          icon: Icons.person,
+        ),
+        _buildConnector(isCompleted: delivery.pickedUpAt != null),
+        _buildStep(
+          context: context,
+          title: 'Item Picked Up',
+          subtitle: delivery.pickedUpAt != null // ✅ FIXED - was pickupTime
+              ? DateFormat('MMM d, h:mm a').format(delivery.pickedUpAt!) // ✅ FIXED
+              : null,
+          isCompleted: delivery.pickedUpAt != null,
+          isActive: delivery.status == 'in_transit' && delivery.pickedUpAt != null,
+          icon: Icons.inventory,
+        ),
+        _buildConnector(isCompleted: delivery.deliveredAt != null),
+        _buildStep(
+          context: context,
+          title: delivery.isCancelled ? 'Cancelled' : 'Delivered',
+          subtitle: delivery.deliveredAt != null // ✅ FIXED - was deliveryTime
+              ? DateFormat('MMM d, h:mm a').format(delivery.deliveredAt!) // ✅ FIXED
+              : delivery.isCancelled && delivery.failureReason != null
+                  ? delivery.failureReason
+                  : null,
+          isCompleted: delivery.deliveredAt != null || delivery.isCancelled,
+          isActive: false,
+          icon: delivery.isCancelled ? Icons.cancel : Icons.check_circle,
+          iconColor: delivery.isCancelled ? Colors.red : Colors.green,
+        ),
+      ],
     );
   }
 
-  Widget _buildStatusItem({
-    required int step,
+  Widget _buildStep({
+    required BuildContext context,
     required String title,
-    required String subtitle,
-    required IconData icon,
+    String? subtitle,
     required bool isCompleted,
     required bool isActive,
-    bool isLast = false,
+    required IconData icon,
+    Color? iconColor,
   }) {
-    return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Column(
+    final color = isCompleted
+        ? (iconColor ?? Colors.green)
+        : isActive
+            ? Colors.blue
+            : Colors.grey;
+
+    return Row(
+      children: [
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1), // ✅ FIXED deprecation
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: color,
+              width: 2,
+            ),
+          ),
+          child: Icon(
+            icon,
+            color: color,
+            size: 20,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: isCompleted
-                      ? Colors.green
-                      : isActive
-                          ? Colors.blue
-                          : Colors.grey[300],
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  isCompleted ? Icons.check : icon,
-                  color: Colors.white,
-                  size: 20,
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: isCompleted || isActive ? FontWeight.w600 : FontWeight.normal,
+                  color: isCompleted || isActive ? Colors.black87 : Colors.grey[600],
                 ),
               ),
-              if (!isLast)
-                Expanded(
-                  child: Container(
-                    width: 2,
-                    margin: const EdgeInsets.symmetric(vertical: 4),
-                    color: isCompleted ? Colors.green : Colors.grey[300],
+              if (subtitle != null)
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[600],
                   ),
                 ),
             ],
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: isCompleted || isActive
-                          ? Colors.black
-                          : Colors.grey[600],
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    subtitle,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildConnector({required bool isCompleted}) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 19),
+      child: Container(
+        width: 2,
+        height: 30,
+        color: isCompleted ? Colors.green : Colors.grey[300],
       ),
     );
   }

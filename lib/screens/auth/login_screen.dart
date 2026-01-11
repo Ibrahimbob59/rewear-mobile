@@ -87,7 +87,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 40),
                   
                   // Logo
-                  Icon(
+                  const Icon(
                     Icons.recycling,
                     size: 80,
                     color: AppTheme.primaryColor,
@@ -155,11 +155,11 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 24),
                   
                   // Divider
-                  Row(
+                  const Row(
                     children: [
-                      const Expanded(child: Divider()),
+                      Expanded(child: Divider()),
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        padding: EdgeInsets.symmetric(horizontal: 16),
                         child: Text(
                           'OR',
                           style: TextStyle(
@@ -168,7 +168,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                       ),
-                      const Expanded(child: Divider()),
+                      Expanded(child: Divider()),
                     ],
                   ),
                   

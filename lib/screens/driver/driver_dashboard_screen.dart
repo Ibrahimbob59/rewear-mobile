@@ -94,7 +94,7 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
               ),
             ),
             const SizedBox(height: 12),
-            Row(
+            const Row(
               children: [
                 Expanded(
                   child: _StatCard(
@@ -104,7 +104,7 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
                     color: Colors.blue,
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: 12),
                 Expanded(
                   child: _StatCard(
                     icon: Icons.attach_money,
