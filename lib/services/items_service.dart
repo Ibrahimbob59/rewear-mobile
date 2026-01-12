@@ -152,9 +152,24 @@ class ItemsService {
   Future<List<Item>> getMyListings() async {
     try {
       final response = await _dio.get('/items/my-listings');
-      return (response.data['data'] as List)
-          .map((json) => Item.fromJson(json))
-          .toList();
+
+      print('✅ My listings response received: ${response.statusCode}');
+      print('📦 Data structure: ${response.data.runtimeType}');
+
+      // Backend returns: { "success": true, "data": { "items": [...] } }
+      final data = response.data['data'];
+
+      // Handle different response structures
+      if (data is List) {
+        // Direct list response
+        return data.map((json) => Item.fromJson(json)).toList();
+      } else if (data is Map) {
+        // Wrapped in a map with 'items' key
+        final items = data['items'] as List;
+        return items.map((json) => Item.fromJson(json)).toList();
+      }
+
+      throw Exception('Unexpected response structure');
     } catch (e) {
       print('❌ Error fetching my listings: $e');
       rethrow;

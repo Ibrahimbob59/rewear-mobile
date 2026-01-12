@@ -47,7 +47,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (success) {
       Helpers.showSnackBar(context, 'Login successful!');
-      context.go('/home');
+      context.go('/');
     } else {
       Helpers.showSnackBar(
         context,

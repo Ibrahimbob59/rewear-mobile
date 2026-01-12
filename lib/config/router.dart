@@ -42,7 +42,7 @@ class AppRouter {
   static final StorageService _storageService = StorageService();
 
   static int _getIndexFromLocation(String location) {
-    if (location.startsWith('/cart')) return 1;
+    if (location.startsWith('/selling')) return 1;
     if (location.startsWith('/orders')) return 2;
     if (location.startsWith('/profile')) return 3;
     return 0;
@@ -55,20 +55,21 @@ class AppRouter {
   }
 
   static bool _needsAuth(String location) {
-    return location == '/create-item' ||
-        location.startsWith('/checkout') ||
-        (location.startsWith('/orders/') && location != '/orders') ||
-        location.startsWith('/profile/edit') ||
-        location == '/profile/change-password' ||
-        location == '/selling' ||
-        location.startsWith('/driver') ||
-        location.startsWith('/charity');
+    // Public routes (no auth required)
+    if (location == '/login' ||
+        location == '/register' ||
+        location.startsWith('/otp') ||
+        location == '/item') {
+      return false;
+    }
+
+    // All other routes require authentication
+    return true;
   }
 
   static final GoRouter router = GoRouter(
     navigatorKey: _rootNavigatorKey,
 
-    // Keep your current behavior (home is accessible even if not logged in)
     initialLocation: '/',
 
     redirect: (BuildContext context, GoRouterState state) async {
@@ -152,6 +153,13 @@ class AppRouter {
               child: ProfileScreen(),
             ),
           ),
+          GoRoute(
+            path: '/selling',
+            name: 'selling',
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: SellingScreen(),
+            ),
+          ),
         ],
       ),
 
@@ -189,7 +197,6 @@ class AppRouter {
       ),
       GoRoute(path: '/create-item', builder: (context, state) => const CreateItemScreen()),
       GoRoute(path: '/search', builder: (context, state) => const SearchScreen()),
-      GoRoute(path: '/selling', builder: (context, state) => const SellingScreen()),
       GoRoute(path: '/checkout', builder: (context, state) => const CheckoutScreen()),
 
       // ✅ FIX 1: Order Detail Route (String -> int)

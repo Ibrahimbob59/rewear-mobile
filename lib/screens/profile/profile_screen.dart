@@ -446,10 +446,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ],
               ),
             );
-            
+
             if (confirm == true && context.mounted) {
+              // Logout
               await authProvider.logout();
+
+              // Wait a bit for state to propagate
+              await Future.delayed(const Duration(milliseconds: 300));
+
               if (context.mounted) {
+                // Navigate to login
                 context.go('/login');
               }
             }

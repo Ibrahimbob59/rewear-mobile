@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
 import '../../config/theme.dart';
-import '../../providers/cart_provider.dart';
 
 class MainScaffold extends StatelessWidget {
   final Widget child;
@@ -20,7 +18,7 @@ class MainScaffold extends StatelessWidget {
         context.go('/');
         break;
       case 1:
-        context.go('/cart');
+        context.go('/selling');
         break;
       case 2:
         context.go('/orders');
@@ -62,10 +60,9 @@ class MainScaffold extends StatelessWidget {
                 _buildNavItem(
                   context: context,
                   index: 1,
-                  icon: Icons.shopping_cart_outlined,
-                  activeIcon: Icons.shopping_cart,
-                  label: 'Cart',
-                  showBadge: true,
+                  icon: Icons.sell_outlined,
+                  activeIcon: Icons.sell,
+                  label: 'Sell',
                 ),
                 _buildNavItem(
                   context: context,
@@ -95,10 +92,9 @@ class MainScaffold extends StatelessWidget {
     required IconData icon,
     required IconData activeIcon,
     required String label,
-    bool showBadge = false,
   }) {
     final isSelected = currentIndex == index;
-    
+
     return GestureDetector(
       onTap: () => _onItemTapped(context, index),
       behavior: HitTestBehavior.opaque,
@@ -113,50 +109,14 @@ class MainScaffold extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Stack(
-              clipBehavior: Clip.none,
-              children: [
-                AnimatedScale(
-                  scale: isSelected ? 1.1 : 1.0,
-                  duration: const Duration(milliseconds: 200),
-                  child: Icon(
-                    isSelected ? activeIcon : icon,
-                    color: isSelected ? AppTheme.primaryColor : AppTheme.textSecondary,
-                    size: 24,
-                  ),
-                ),
-                if (showBadge)
-                  Positioned(
-                    right: -8,
-                    top: -4,
-                    child: Consumer<CartProvider>(
-                      builder: (context, cart, _) {
-                        if (cart.itemCount == 0) return const SizedBox.shrink();
-                        return Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: BoxDecoration(
-                            color: AppTheme.errorColor,
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 1.5),
-                          ),
-                          constraints: const BoxConstraints(
-                            minWidth: 18,
-                            minHeight: 18,
-                          ),
-                          child: Text(
-                            cart.itemCount > 99 ? '99+' : cart.itemCount.toString(),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-              ],
+            AnimatedScale(
+              scale: isSelected ? 1.1 : 1.0,
+              duration: const Duration(milliseconds: 200),
+              child: Icon(
+                isSelected ? activeIcon : icon,
+                color: isSelected ? AppTheme.primaryColor : AppTheme.textSecondary,
+                size: 24,
+              ),
             ),
             const SizedBox(height: 4),
             AnimatedDefaultTextStyle(

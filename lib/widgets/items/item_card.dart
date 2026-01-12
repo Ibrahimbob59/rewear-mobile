@@ -130,6 +130,8 @@ class ItemCard extends StatelessWidget {
                           if (item.brand != null) item.brand!,
                           'Size ${item.size.displayName}',
                         ].join(' • '),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           fontSize: 11,
                           color: Colors.grey[600],

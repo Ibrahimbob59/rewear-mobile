@@ -325,23 +325,14 @@ class _CreateItemScreenState extends State<CreateItemScreen> {
                 labelText: 'Condition*',
                 filled: true,
                 fillColor: Colors.white,
+                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
               ),
               items: Condition.all.map((condition) {
                 return DropdownMenuItem(
                   value: condition,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(condition.displayName),
-                      Text(
-                        condition.description,
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                    ],
+                  child: Text(
+                    condition.displayName,
+                    style: const TextStyle(fontSize: 14),
                   ),
                 );
               }).toList(),

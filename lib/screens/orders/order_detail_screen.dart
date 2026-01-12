@@ -309,7 +309,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
   Widget _buildItemCard(Map<String, dynamic> order) {
     final item = order['item'] as Map<String, dynamic>?;
-    
+
     if (item == null) {
       return const Card(
         child: Padding(
@@ -321,7 +321,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
     final title = item['title'] ?? 'Unknown Item';
     final description = item['description'] ?? '';
-    final price = (order['item_price'] ?? 0).toDouble();
+    final price = double.tryParse(order['item_price']?.toString() ?? '0') ?? 0.0;
     final images = item['images'] as List?;
     final condition = item['condition'] ?? '';
     final size = item['size'] ?? '';
@@ -547,9 +547,9 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   }
 
   Widget _buildPriceCard(Map<String, dynamic> order) {
-    final itemPrice = (order['item_price'] ?? 0).toDouble();
-    final deliveryFee = (order['delivery_fee'] ?? 0).toDouble();
-    final totalAmount = (order['total_amount'] ?? 0).toDouble();
+    final itemPrice = double.tryParse(order['item_price']?.toString() ?? '0') ?? 0.0;
+    final deliveryFee = double.tryParse(order['delivery_fee']?.toString() ?? '0') ?? 0.0;
+    final totalAmount = double.tryParse(order['total_amount']?.toString() ?? '0') ?? 0.0;
 
     return Card(
       child: Padding(

@@ -201,7 +201,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
             SwitchListTile(
               title: const Text('Show only donations'),
               value: _isDonation ?? false,
-              onChanged: (v) => setState(() => _isDonation = v),
+              onChanged: (v) => setState(() => _isDonation = v ? true : null),
               contentPadding: EdgeInsets.zero,
             ),
 

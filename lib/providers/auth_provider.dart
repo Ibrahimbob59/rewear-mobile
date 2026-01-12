@@ -109,8 +109,19 @@ class AuthProvider with ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    await _authService.logout();
-    _user = null;
+    try {
+      // Clear local state immediately
+      _user = null;
+      await _storageService.clearTokens();
+      notifyListeners();
+
+      // Call logout API in background (don't await)
+      _authService.logout().catchError((e) {
+        debugPrint('Logout API error (ignored): $e');
+      });
+    } catch (e) {
+      debugPrint('Logout error: $e');
+    }
 
     _isLoading = false;
     notifyListeners();

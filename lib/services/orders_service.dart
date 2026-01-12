@@ -28,18 +28,51 @@ class OrdersService {
     }
   }
 
-  // Get all orders for current user
-  Future<List<Map<String, dynamic>>> getOrders({String? type}) async {
+  // Get all orders for current user (buyer orders)
+  Future<List<Map<String, dynamic>>> getOrders() async {
     try {
-      final queryParams = type != null ? {'type': type} : null;
-      final response = await dio.get('/orders', queryParameters: queryParams);
-      
+      final response = await dio.get('/orders');
+
       if (response.data['success'] != true) {
         throw Exception(response.data['message'] ?? 'Failed to load orders');
       }
-      
+
       final data = response.data['data'];
-      return List<Map<String, dynamic>>.from(data['orders'] ?? []);
+
+      // Handle different response structures
+      if (data == null) {
+        return [];
+      }
+
+      // If data is a list, return it directly
+      if (data is List) {
+        return data.map((item) {
+          if (item is Map) {
+            return Map<String, dynamic>.from(item);
+          }
+          return <String, dynamic>{'data': item};
+        }).toList();
+      }
+
+      // If data has 'orders' key, extract it
+      if (data is Map && data.containsKey('orders')) {
+        final ordersList = data['orders'];
+        if (ordersList is List) {
+          return ordersList.map((item) {
+            if (item is Map) {
+              return Map<String, dynamic>.from(item);
+            }
+            return <String, dynamic>{'data': item};
+          }).toList();
+        }
+      }
+
+      // If data is a single order, wrap it
+      if (data is Map) {
+        return [Map<String, dynamic>.from(data)];
+      }
+
+      return [];
     } catch (e) {
       throw Exception('Failed to load orders: $e');
     }
@@ -105,16 +138,38 @@ class OrdersService {
   // Get buyer orders (orders I placed)
   Future<List<Map<String, dynamic>>> getBuyerOrders() async {
     try {
-      final response = await dio.get('/orders', queryParameters: {
-        'type': 'buyer'
-      });
-      
+      final response = await dio.get('/orders');
+
       if (response.data['success'] != true) {
         throw Exception(response.data['message'] ?? 'Failed to load orders');
       }
-      
+
       final data = response.data['data'];
-      return List<Map<String, dynamic>>.from(data['orders'] ?? []);
+
+      // Handle different response structures
+      if (data == null) {
+        return [];
+      }
+
+      // If data is a list, return it directly
+      if (data is List) {
+        return data.map((item) => Map<String, dynamic>.from(item)).toList();
+      }
+
+      // If data has 'orders' key, extract it
+      if (data is Map && data.containsKey('orders')) {
+        final ordersList = data['orders'];
+        if (ordersList is List) {
+          return ordersList.map((item) => Map<String, dynamic>.from(item)).toList();
+        }
+      }
+
+      // If data is a single order, wrap it
+      if (data is Map) {
+        return [Map<String, dynamic>.from(data)];
+      }
+
+      return [];
     } catch (e) {
       throw Exception('Failed to load buyer orders: $e');
     }
@@ -123,16 +178,38 @@ class OrdersService {
   // Get seller orders (items I sold)
   Future<List<Map<String, dynamic>>> getSellerOrders() async {
     try {
-      final response = await dio.get('/orders', queryParameters: {
-        'type': 'seller'
-      });
-      
+      final response = await dio.get('/orders/as-seller');
+
       if (response.data['success'] != true) {
         throw Exception(response.data['message'] ?? 'Failed to load orders');
       }
-      
+
       final data = response.data['data'];
-      return List<Map<String, dynamic>>.from(data['orders'] ?? []);
+
+      // Handle different response structures
+      if (data == null) {
+        return [];
+      }
+
+      // If data is a list, return it directly
+      if (data is List) {
+        return data.map((item) => Map<String, dynamic>.from(item)).toList();
+      }
+
+      // If data has 'orders' key, extract it
+      if (data is Map && data.containsKey('orders')) {
+        final ordersList = data['orders'];
+        if (ordersList is List) {
+          return ordersList.map((item) => Map<String, dynamic>.from(item)).toList();
+        }
+      }
+
+      // If data is a single order, wrap it
+      if (data is Map) {
+        return [Map<String, dynamic>.from(data)];
+      }
+
+      return [];
     } catch (e) {
       throw Exception('Failed to load seller orders: $e');
     }

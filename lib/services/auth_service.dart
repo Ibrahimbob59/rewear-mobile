@@ -149,14 +149,11 @@ class AuthService {
         requiresAuth: true,
       );
 
-      if (response.success) {
-        await _storageService.clearAll();
-      }
-
+      // Don't clear storage here - let AuthProvider handle it
       return response;
     } catch (e) {
       _logger.e('Logout Error: $e');
-      await _storageService.clearAll(); // Clear locally even if API fails
+      // Return success even if API fails - we'll clear locally
       return ApiResponse(
         success: true,
         message: 'Logged out',

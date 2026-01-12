@@ -87,6 +87,7 @@ class OrdersProvider extends ChangeNotifier {
       notifyListeners();
 
       final orders = await _ordersService.getOrders();
+
       // For now, put all in buyer orders
       buyerOrders = orders;
 

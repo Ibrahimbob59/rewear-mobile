@@ -10,29 +10,20 @@ class OrdersScreen extends StatefulWidget {
   State<OrdersScreen> createState() => _OrdersScreenState();
 }
 
-class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-
+class _OrdersScreenState extends State<OrdersScreen> {
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
-    
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final ordersProvider = context.read<OrdersProvider>();
-      ordersProvider.loadAllOrders();
+      ordersProvider.loadBuyerOrders();
     });
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
   }
 
   Future<void> _onRefresh() async {
     final ordersProvider = context.read<OrdersProvider>();
-    await ordersProvider.loadAllOrders();
+    await ordersProvider.loadBuyerOrders();
   }
 
   @override
@@ -40,13 +31,6 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Orders'),
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(text: 'Purchases'),
-            Tab(text: 'Sales'),
-          ],
-        ),
       ),
       body: Consumer<OrdersProvider>(
         builder: (context, ordersProvider, child) {
@@ -72,22 +56,10 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
             );
           }
 
-          return TabBarView(
-            controller: _tabController,
-            children: [
-              // Purchases Tab
-              _buildOrdersList(
-                ordersProvider.buyerOrders,
-                'No purchases yet',
-                'Items you\'ve purchased will appear here',
-              ),
-              // Sales Tab
-              _buildOrdersList(
-                ordersProvider.sellerOrders,
-                'No sales yet',
-                'Items you\'ve sold will appear here',
-              ),
-            ],
+          return _buildOrdersList(
+            ordersProvider.buyerOrders,
+            'No purchases yet',
+            'Items you\'ve purchased will appear here',
           );
         },
       ),
@@ -143,21 +115,35 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
   Widget _buildOrderCard(Map<String, dynamic> order) {
     final orderNumber = order['order_number'] ?? 'N/A';
     final status = order['status'] ?? 'unknown';
-    final totalAmount = (order['total_amount'] ?? 0).toDouble();
+    final totalAmount = double.tryParse(order['total_amount']?.toString() ?? '0') ?? 0.0;
     final createdAt = order['created_at'] ?? '';
-    
-    // Get item info
-    final item = order['item'] as Map<String, dynamic>?;
-    final itemTitle = item?['title'] ?? 'Unknown Item';
-    final itemImage = item?['images'] != null && (item!['images'] as List).isNotEmpty
-        ? (item['images'] as List).first
-        : null;
+
+    // Get item info - handle both object and string/ID cases
+    final itemData = order['item'];
+
+    String itemTitle = 'Unknown Item';
+    String? itemImage;
+
+    if (itemData is Map<String, dynamic>) {
+      itemTitle = itemData['title'] ?? 'Unknown Item';
+      // Handle both 'image' (singular) and 'images' (plural)
+      if (itemData['image'] != null) {
+        itemImage = itemData['image'].toString();
+      } else if (itemData['images'] is List && (itemData['images'] as List).isNotEmpty) {
+        itemImage = (itemData['images'] as List).first?.toString();
+      }
+    }
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: InkWell(
         onTap: () {
-          context.push('/orders/${order['id']}');
+          final orderId = order['id'];
+          if (orderId != null) {
+            context.push('/orders/$orderId');
+          } else {
+            print('⚠️ Order ID is null');
+          }
         },
         child: Padding(
           padding: const EdgeInsets.all(12),
@@ -246,7 +232,10 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
                   ),
                   TextButton(
                     onPressed: () {
-                      context.push('/orders/${order['id']}');
+                      final orderId = order['id'];
+                      if (orderId != null) {
+                        context.push('/orders/$orderId');
+                      }
                     },
                     child: const Text('View Details'),
                   ),

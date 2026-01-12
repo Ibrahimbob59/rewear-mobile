@@ -6,52 +6,49 @@ class CharityService {
 
   CharityService(this.dio);
 
-  // Get charity profile - CORRECT
+  // Get charity profile
   Future<Map<String, dynamic>> getProfile() async {
     try {
-      final response = await dio.get('/charity/profile');
-      
+      final response = await dio.get('/charity/dashboard');
+
       if (response.data['success'] != true) {
         throw Exception(response.data['message'] ?? 'Failed to load profile');
       }
-      
+
       return response.data['data'];
     } catch (e) {
       throw Exception('Failed to load charity profile: $e');
     }
   }
 
-  // Get impact statistics - CORRECT
+  // Get impact statistics
   Future<Map<String, dynamic>> getImpact() async {
     try {
-      final response = await dio.get('/charity/impact');
-      
+      final response = await dio.get('/charity/impact-stats');
+
       if (response.data['success'] != true) {
         throw Exception(response.data['message'] ?? 'Failed to load impact stats');
       }
-      
+
       return response.data['data'];
     } catch (e) {
       throw Exception('Failed to load impact stats: $e');
     }
   }
 
-  // Get available donations - CORRECTED (uses items endpoint with filters)
+  // Get available donations
   Future<List<Item>> getAvailableDonations() async {
     try {
-      final response = await dio.get('/items', queryParameters: {
-        'is_donation': 'true',
-        'status': 'available',
-      });
-      
+      final response = await dio.get('/charity/available-donations');
+
       if (response.data['success'] != true) {
         throw Exception(response.data['message'] ?? 'Failed to load donations');
       }
-      
+
       final data = response.data['data'];
-      final itemsList = data['items'] as List;
-      
-      return itemsList.map((json) => Item.fromJson(json)).toList();
+      final donationsList = data['donations'] as List;
+
+      return donationsList.map((json) => Item.fromJson(json)).toList();
     } catch (e) {
       throw Exception('Failed to load available donations: $e');
     }
@@ -73,38 +70,37 @@ class CharityService {
     }
   }
 
-  // Claim a donation - CORRECTED ENDPOINT AND PARAMETERS
+  // Accept/Claim a donation
   Future<Map<String, dynamic>> claimDonation({
     required int itemId,
     required String distributionPlan,
     required int beneficiariesCount,
   }) async {
     try {
-      final response = await dio.post('/charity/claim-donation', data: {
-        'item_id': itemId,
+      final response = await dio.post('/charity/accept-donation/$itemId', data: {
         'distribution_plan': distributionPlan,
         'beneficiaries_count': beneficiariesCount,
       });
-      
+
       if (response.data['success'] != true) {
-        throw Exception(response.data['message'] ?? 'Failed to claim donation');
+        throw Exception(response.data['message'] ?? 'Failed to accept donation');
       }
-      
+
       return response.data['data'];
     } catch (e) {
-      throw Exception('Failed to claim donation: $e');
+      throw Exception('Failed to accept donation: $e');
     }
   }
 
-  // Get claimed donations (received items) - CORRECT
+  // Get claimed donations (received items)
   Future<List<Map<String, dynamic>>> getClaimedDonations() async {
     try {
-      final response = await dio.get('/charity/claimed-donations');
-      
+      final response = await dio.get('/charity/my-donations');
+
       if (response.data['success'] != true) {
         throw Exception(response.data['message'] ?? 'Failed to load claimed donations');
       }
-      
+
       final data = response.data['data'];
       return List<Map<String, dynamic>>.from(data['donations'] ?? []);
     } catch (e) {
@@ -150,12 +146,12 @@ class CharityService {
   // Get charity dashboard data
   Future<Map<String, dynamic>> getDashboard() async {
     try {
-      final response = await dio.get('/charity/profile');
-      
+      final response = await dio.get('/charity/dashboard');
+
       if (response.data['success'] != true) {
         throw Exception(response.data['message'] ?? 'Failed to load dashboard');
       }
-      
+
       return response.data['data'];
     } catch (e) {
       throw Exception('Failed to load charity dashboard: $e');
@@ -165,12 +161,12 @@ class CharityService {
   // Get my donations (claimed donations)
   Future<List<Map<String, dynamic>>> getMyDonations() async {
     try {
-      final response = await dio.get('/charity/claimed-donations');
-      
+      final response = await dio.get('/charity/my-donations');
+
       if (response.data['success'] != true) {
         throw Exception(response.data['message'] ?? 'Failed to load donations');
       }
-      
+
       final data = response.data['data'];
       return List<Map<String, dynamic>>.from(data['donations'] ?? []);
     } catch (e) {

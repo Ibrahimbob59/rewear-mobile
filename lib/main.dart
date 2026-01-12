@@ -16,6 +16,7 @@ import 'services/driver_service.dart';
 import 'services/delivery_service.dart';
 import 'services/charity_service.dart';
 import 'services/location_service.dart';
+import 'services/storage_service.dart';
 
 // Providers
 import 'providers/auth_provider.dart';
@@ -44,6 +45,9 @@ void main() async {
       receiveTimeout: const Duration(seconds: 30),
     ),
   );
+
+  // Initialize storage service
+  await StorageService().init();
 
   // ============================
   // AUTH + REFRESH INTERCEPTOR
@@ -141,10 +145,14 @@ void main() async {
   final charityService = CharityService(dio);
   final locationService = LocationService();
 
+  // Create AuthProvider instance and initialize
+  final authProvider = AuthProvider();
+  await authProvider.initialize();
+
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider.value(value: authProvider),
         ChangeNotifierProvider(create: (_) => ItemsProvider(itemsService)),
         ChangeNotifierProvider(create: (_) => CartProvider()),
         ChangeNotifierProvider(create: (_) => FavoritesProvider(favoritesService)),
