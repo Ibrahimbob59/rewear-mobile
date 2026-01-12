@@ -1,115 +1,153 @@
-import 'dart:io';
 import 'package:dio/dio.dart';
-import '../models/driver_model.dart';
 
 class DriverService {
-  final Dio _dio;
+  final Dio dio;
 
-  DriverService(this._dio);
+  DriverService(this.dio);
 
-  Future<Driver> applyAsDriver({
+  // Apply as driver - CORRECTED ENDPOINT
+  Future<Map<String, dynamic>> applyAsDriver({
+    required String fullName,
+    required String phone,
+    required String email,
+    required String address,
+    required String city,
     required String vehicleType,
-    required String vehicleNumber,
-    required String licenseNumber,
-    required File licenseImage,
-    required File vehicleImage,
+    String? idDocumentUrl,
+    String? drivingLicenseUrl,
+    String? vehicleRegistrationUrl,
   }) async {
     try {
       final formData = FormData.fromMap({
+        'full_name': fullName,
+        'phone': phone,
+        'email': email,
+        'address': address,
+        'city': city,
         'vehicle_type': vehicleType,
-        'vehicle_number': vehicleNumber,
-        'license_number': licenseNumber,
-        'license_image': await MultipartFile.fromFile(
-          licenseImage.path,
-          filename: 'license_${DateTime.now().millisecondsSinceEpoch}.jpg',
-        ),
-        'vehicle_image': await MultipartFile.fromFile(
-          vehicleImage.path,
-          filename: 'vehicle_${DateTime.now().millisecondsSinceEpoch}.jpg',
-        ),
+        if (idDocumentUrl != null) 
+          'id_document': await MultipartFile.fromFile(idDocumentUrl),
+        if (drivingLicenseUrl != null)
+          'driving_license': await MultipartFile.fromFile(drivingLicenseUrl),
+        if (vehicleRegistrationUrl != null)
+          'vehicle_registration': await MultipartFile.fromFile(vehicleRegistrationUrl),
       });
 
-      final response = await _dio.post('/driver-applications', data: formData);
-      return Driver.fromJson(response.data['data']);
+      final response = await dio.post('/driver-applications', data: formData);
+      
+      if (response.data['success'] != true) {
+        throw Exception(response.data['message'] ?? 'Failed to submit application');
+      }
+      
+      return response.data['data'];
     } catch (e) {
-      print('Error applying as driver: $e');
-      rethrow;
+      throw Exception('Failed to submit driver application: $e');
     }
   }
 
+  // Get my application status - CORRECTED ENDPOINT
   Future<Map<String, dynamic>?> getMyApplication() async {
     try {
-      final response = await _dio.get('/driver-applications/my-application');
-      return response.data['data'];
-    } catch (e) {
-      print('Error getting my application: $e');
+      final response = await dio.get('/driver-applications/my-application');
+      
+      if (response.data['success'] == true) {
+        return response.data['data'];
+      }
       return null;
+    } catch (e) {
+      if (e is DioException && e.response?.statusCode == 404) {
+        return null; // No application yet
+      }
+      throw Exception('Failed to get application: $e');
     }
   }
 
+  // Check driver eligibility - CORRECTED ENDPOINT
   Future<Map<String, dynamic>> checkEligibility() async {
     try {
-      final response = await _dio.get('/driver-applications/eligibility');
+      final response = await dio.get('/driver-applications/eligibility');
       return response.data['data'];
     } catch (e) {
-      print('Error checking eligibility: $e');
-      rethrow;
+      throw Exception('Failed to check eligibility: $e');
     }
   }
 
+  // Get driver dashboard stats - CORRECT
   Future<Map<String, dynamic>> getDashboard() async {
     try {
-      final response = await _dio.get('/driver/dashboard');
+      final response = await dio.get('/driver/dashboard');
+      
+      if (response.data['success'] != true) {
+        throw Exception(response.data['message'] ?? 'Failed to load dashboard');
+      }
+      
       return response.data['data'];
     } catch (e) {
-      print('Error getting driver dashboard: $e');
-      rethrow;
+      throw Exception('Failed to load dashboard: $e');
     }
   }
 
-  Future<List<dynamic>> getMyDeliveries({String? status}) async {
+  // Get my deliveries - CORRECT
+  Future<List<Map<String, dynamic>>> getMyDeliveries({String? status}) async {
     try {
-      final queryParams = <String, dynamic>{};
-      if (status != null) queryParams['status'] = status;
+      final queryParams = status != null ? {'status': status} : null;
+      final response = await dio.get('/driver/deliveries', queryParameters: queryParams);
       
-      final response = await _dio.get('/driver/deliveries', queryParameters: queryParams);
-      return response.data['data'] as List<dynamic>;
+      if (response.data['success'] != true) {
+        throw Exception(response.data['message'] ?? 'Failed to load deliveries');
+      }
+      
+      final data = response.data['data'];
+      return List<Map<String, dynamic>>.from(data['deliveries'] ?? []);
     } catch (e) {
-      print('Error getting my deliveries: $e');
-      rethrow;
+      throw Exception('Failed to load deliveries: $e');
     }
   }
 
-  Future<List<dynamic>> getAvailableDeliveries() async {
+  // Get available deliveries to accept - CORRECT
+  Future<List<Map<String, dynamic>>> getAvailableDeliveries() async {
     try {
-      final response = await _dio.get('/driver/available-deliveries');
-      return response.data['data'] as List<dynamic>;
+      final response = await dio.get('/driver/available-deliveries');
+      
+      if (response.data['success'] != true) {
+        throw Exception(response.data['message'] ?? 'Failed to load available deliveries');
+      }
+      
+      final data = response.data['data'];
+      return List<Map<String, dynamic>>.from(data['deliveries'] ?? []);
     } catch (e) {
-      print('Error getting available deliveries: $e');
-      rethrow;
+      throw Exception('Failed to load available deliveries: $e');
     }
   }
 
+  // Accept a delivery - CORRECT
   Future<Map<String, dynamic>> acceptDelivery(int deliveryId) async {
     try {
-      final response = await _dio.post('/driver/accept-delivery/$deliveryId');
+      final response = await dio.post('/driver/accept-delivery/$deliveryId');
+      
+      if (response.data['success'] != true) {
+        throw Exception(response.data['message'] ?? 'Failed to accept delivery');
+      }
+      
       return response.data['data'];
     } catch (e) {
-      print('Error accepting delivery: $e');
-      rethrow;
+      throw Exception('Failed to accept delivery: $e');
     }
   }
 
+  // Get earnings - CORRECT
   Future<Map<String, dynamic>> getEarnings({String? period}) async {
     try {
-      final queryParams = <String, dynamic>{};
-      if (period != null) queryParams['period'] = period;
+      final queryParams = period != null ? {'period': period} : null;
+      final response = await dio.get('/driver/earnings', queryParameters: queryParams);
       
-      final response = await _dio.get('/driver/earnings', queryParameters: queryParams);
+      if (response.data['success'] != true) {
+        throw Exception(response.data['message'] ?? 'Failed to load earnings');
+      }
+      
       return response.data['data'];
     } catch (e) {
-      print('Error getting earnings: $e');
-      rethrow;
+      throw Exception('Failed to load earnings: $e');
     }
   }
 }

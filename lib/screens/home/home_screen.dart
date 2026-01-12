@@ -447,25 +447,30 @@ class _StatsBarState extends State<_StatsBar> {
     super.initState();
     _fetchStats();
   }
+Future<void> _fetchStats() async {
+  try {
+    final dio = Dio();
+    final response = await dio.get('http://127.0.0.1:8000/api/admin/stats');
 
-  Future<void> _fetchStats() async {
-    try {
-      final dio = Dio();
-      final response = await dio.get('http://10.0.2.2:8000/api/admin/stats');
-      setState(() {
-        _stats = {
-          'items_sold': response.data['data']['items_sold'] ?? 0,
-          'total_donations': response.data['data']['total_donations'] ?? 0,
-        };
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _stats = {'items_sold': 0, 'total_donations': 0};
-        _isLoading = false;
-      });
-    }
+    if (!mounted) return; // ✅ prevents setState after dispose
+
+    setState(() {
+      _stats = {
+        'items_sold': response.data['data']['items_sold'] ?? 0,
+        'total_donations': response.data['data']['total_donations'] ?? 0,
+      };
+      _isLoading = false;
+    });
+  } catch (e) {
+    if (!mounted) return; // ✅ prevents setState after dispose
+
+    setState(() {
+      _stats = {'items_sold': 0, 'total_donations': 0};
+      _isLoading = false;
+    });
   }
+}
+
 
   @override
   Widget build(BuildContext context) {

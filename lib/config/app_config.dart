@@ -1,8 +1,8 @@
 class AppConfig {
   // API Configuration
   // Use 10.0.2.2 for Android emulator (maps to host machine's localhost)
-  static const String baseUrl = 'http://10.0.2.2:8000/api'; // Android emulator
-  // static const String baseUrl = 'http://localhost:8000/api'; // iOS simulator
+  //static const String baseUrl = 'http://192.168.10.90:8000/api'; // Android emulator
+  static const String baseUrl = 'http://127.0.0.1:8000/api'; // iOS simulator
   // static const String baseUrl = 'https://api.rewear.com/api'; // Production
   
   static const String apiVersion = 'v1';

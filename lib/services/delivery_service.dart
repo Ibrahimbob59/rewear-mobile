@@ -1,203 +1,243 @@
-import 'dart:io';
 import 'package:dio/dio.dart';
-import '../models/delivery_model.dart';
-import 'storage_service.dart';
 
 class DeliveryService {
-  final Dio _dio;
-  final StorageService _storageService = StorageService();
+  final Dio dio;
 
-  DeliveryService(this._dio);
+  DeliveryService(this.dio);
 
-  Future<Map<String, String>> _getHeaders() async {
-    final token = await _storageService.getAccessToken();
-    return {
-      'Authorization': 'Bearer $token',
-      'Accept': 'application/json',
-    };
-  }
-
-  // Get available deliveries for driver
-  Future<List<Delivery>> getAvailableDeliveries() async {
+  // Get all deliveries (admin only or filtered for user)
+  Future<List<Map<String, dynamic>>> getDeliveries({
+    String? status,
+    int? orderId,
+  }) async {
     try {
-      final response = await _dio.get(
-        '/driver/available-deliveries',
-        options: Options(headers: await _getHeaders()),
-      );
+      final queryParams = <String, dynamic>{};
+      if (status != null) queryParams['status'] = status;
+      if (orderId != null) queryParams['order_id'] = orderId;
+
+      final response = await dio.get('/deliveries', queryParameters: queryParams);
+      
+      if (response.data['success'] != true) {
+        throw Exception(response.data['message'] ?? 'Failed to load deliveries');
+      }
       
       final data = response.data['data'];
-      if (data is List) {
-        return data.map((json) => Delivery.fromJson(json as Map<String, dynamic>)).toList();
-      }
-      return [];
-    } on DioException catch (e) {
-      throw Exception(e.response?.data['message'] ?? 'Failed to load available deliveries');
+      return List<Map<String, dynamic>>.from(data['deliveries'] ?? []);
+    } catch (e) {
+      throw Exception('Failed to load deliveries: $e');
     }
   }
 
-  // Get driver's active deliveries
-  Future<List<Delivery>> getActiveDeliveries() async {
+  // Get single delivery details
+  Future<Map<String, dynamic>> getDelivery(int deliveryId) async {
     try {
-      final response = await _dio.get(
-        '/driver/deliveries',
-        queryParameters: {'status': 'assigned,in_transit'},
-        options: Options(headers: await _getHeaders()),
+      final response = await dio.get('/deliveries/$deliveryId');
+      
+      if (response.data['success'] != true) {
+        throw Exception(response.data['message'] ?? 'Failed to load delivery');
+      }
+      
+      return response.data['data'];
+    } catch (e) {
+      throw Exception('Failed to load delivery: $e');
+    }
+  }
+
+  // Mark delivery as picked up - CORRECT
+  Future<Map<String, dynamic>> markAsPickedUp(int deliveryId) async {
+    try {
+      final response = await dio.post('/deliveries/$deliveryId/pickup');
+      
+      if (response.data['success'] != true) {
+        throw Exception(response.data['message'] ?? 'Failed to mark as picked up');
+      }
+      
+      return response.data['data'];
+    } catch (e) {
+      throw Exception('Failed to mark as picked up: $e');
+    }
+  }
+
+  // Mark delivery as delivered - CORRECT
+  Future<Map<String, dynamic>> markAsDelivered(int deliveryId, {String? notes}) async {
+    try {
+      final requestData = notes != null ? {'delivery_notes': notes} : null;
+      final response = await dio.post(
+        '/deliveries/$deliveryId/deliver',
+        data: requestData,
       );
       
-      final data = response.data['data'];
-      if (data is List) {
-        return data.map((json) => Delivery.fromJson(json as Map<String, dynamic>)).toList();
+      if (response.data['success'] != true) {
+        throw Exception(response.data['message'] ?? 'Failed to mark as delivered');
       }
-      return [];
-    } on DioException catch (e) {
-      throw Exception(e.response?.data['message'] ?? 'Failed to load active deliveries');
+      
+      return response.data['data'];
+    } catch (e) {
+      throw Exception('Failed to mark as delivered: $e');
+    }
+  }
+
+  // Mark delivery as failed - CORRECT
+  Future<Map<String, dynamic>> markAsFailed(int deliveryId, String reason) async {
+    try {
+      final response = await dio.post('/deliveries/$deliveryId/fail', data: {
+        'failure_reason': reason,
+      });
+      
+      if (response.data['success'] != true) {
+        throw Exception(response.data['message'] ?? 'Failed to mark as failed');
+      }
+      
+      return response.data['data'];
+    } catch (e) {
+      throw Exception('Failed to mark as failed: $e');
+    }
+  }
+
+  // Admin: Assign driver to delivery
+  Future<Map<String, dynamic>> assignDriver(int deliveryId, int driverId) async {
+    try {
+      final response = await dio.post('/deliveries/$deliveryId/assign-driver', data: {
+        'driver_id': driverId,
+      });
+      
+      if (response.data['success'] != true) {
+        throw Exception(response.data['message'] ?? 'Failed to assign driver');
+      }
+      
+      return response.data['data'];
+    } catch (e) {
+      throw Exception('Failed to assign driver: $e');
+    }
+  }
+  // Get available deliveries for drivers
+  Future<List<Map<String, dynamic>>> getAvailableDeliveries() async {
+    try {
+      final response = await dio.get('/driver/available-deliveries');
+      
+      if (response.data['success'] != true) {
+        throw Exception(response.data['message'] ?? 'Failed to load available deliveries');
+      }
+      
+      final data = response.data['data'];
+      return List<Map<String, dynamic>>.from(data['deliveries'] ?? []);
+    } catch (e) {
+      throw Exception('Failed to load available deliveries: $e');
+    }
+  }
+
+  // Get active deliveries for current driver
+  Future<List<Map<String, dynamic>>> getActiveDeliveries() async {
+    try {
+      final response = await dio.get('/driver/deliveries', queryParameters: {
+        'status': 'active'
+      });
+      
+      if (response.data['success'] != true) {
+        throw Exception(response.data['message'] ?? 'Failed to load active deliveries');
+      }
+      
+      final data = response.data['data'];
+      return List<Map<String, dynamic>>.from(data['deliveries'] ?? []);
+    } catch (e) {
+      throw Exception('Failed to load active deliveries: $e');
     }
   }
 
   // Get delivery history
-  Future<List<Delivery>> getDeliveryHistory({int page = 1}) async {
+  Future<List<Map<String, dynamic>>> getDeliveryHistory() async {
     try {
-      final response = await _dio.get(
-        '/driver/deliveries',
-        queryParameters: {
-          'page': page,
-          'per_page': 20,
-        },
-        options: Options(headers: await _getHeaders()),
-      );
+      final response = await dio.get('/driver/deliveries', queryParameters: {
+        'status': 'completed'
+      });
+      
+      if (response.data['success'] != true) {
+        throw Exception(response.data['message'] ?? 'Failed to load delivery history');
+      }
       
       final data = response.data['data'];
-      if (data is List) {
-        return data.map((json) => Delivery.fromJson(json as Map<String, dynamic>)).toList();
+      return List<Map<String, dynamic>>.from(data['deliveries'] ?? []);
+    } catch (e) {
+      throw Exception('Failed to load delivery history: $e');
+    }
+  }
+
+  // Accept delivery (for drivers)
+  Future<Map<String, dynamic>> acceptDelivery(int deliveryId) async {
+    try {
+      final response = await dio.post('/driver/accept-delivery/$deliveryId');
+      
+      if (response.data['success'] != true) {
+        throw Exception(response.data['message'] ?? 'Failed to accept delivery');
       }
-      return [];
-    } on DioException catch (e) {
-      throw Exception(e.response?.data['message'] ?? 'Failed to load delivery history');
-    }
-  }
-
-  // Get single delivery
-  Future<Delivery> getDelivery(int id) async {
-    try {
-      final response = await _dio.get(
-        '/deliveries/$id',
-        options: Options(headers: await _getHeaders()),
-      );
       
-      return Delivery.fromJson(response.data['data'] as Map<String, dynamic>);
-    } on DioException catch (e) {
-      throw Exception(e.response?.data['message'] ?? 'Failed to load delivery');
-    }
-  }
-
-  // Accept delivery
-  Future<Delivery> acceptDelivery(int deliveryId) async {
-    try {
-      final response = await _dio.post(
-        '/driver/accept-delivery/$deliveryId',
-        options: Options(headers: await _getHeaders()),
-      );
-      
-      return Delivery.fromJson(response.data['data'] as Map<String, dynamic>);
-    } on DioException catch (e) {
-      throw Exception(e.response?.data['message'] ?? 'Failed to accept delivery');
+      return response.data['data'];
+    } catch (e) {
+      throw Exception('Failed to accept delivery: $e');
     }
   }
 
   // Confirm pickup
-  Future<Delivery> confirmPickup({
-    required int deliveryId,
-    required File proofImage,
-    String? notes,
-  }) async {
+  Future<Map<String, dynamic>> confirmPickup(int deliveryId) async {
     try {
-      final formData = FormData.fromMap({
-        'proof_image': await MultipartFile.fromFile(
-          proofImage.path,
-          filename: 'pickup_${DateTime.now().millisecondsSinceEpoch}.jpg',
-        ),
-        if (notes != null && notes.isNotEmpty) 'notes': notes,
-      });
-
-      final response = await _dio.post(
-        '/deliveries/$deliveryId/pickup',
-        data: formData,
-        options: Options(headers: await _getHeaders()),
-      );
+      final response = await dio.post('/deliveries/$deliveryId/pickup');
       
-      return Delivery.fromJson(response.data['data'] as Map<String, dynamic>);
-    } on DioException catch (e) {
-      throw Exception(e.response?.data['message'] ?? 'Failed to confirm pickup');
+      if (response.data['success'] != true) {
+        throw Exception(response.data['message'] ?? 'Failed to confirm pickup');
+      }
+      
+      return response.data['data'];
+    } catch (e) {
+      throw Exception('Failed to confirm pickup: $e');
     }
   }
 
   // Confirm delivery
-  Future<Delivery> confirmDelivery({
-    required int deliveryId,
-    required File proofImage,
-    double? codCollected,
-    String? notes,
-  }) async {
+  Future<Map<String, dynamic>> confirmDelivery(int deliveryId, {String? notes}) async {
     try {
-      final formData = FormData.fromMap({
-        'proof_image': await MultipartFile.fromFile(
-          proofImage.path,
-          filename: 'delivery_${DateTime.now().millisecondsSinceEpoch}.jpg',
-        ),
-        if (codCollected != null) 'cod_collected': codCollected,
-        if (notes != null && notes.isNotEmpty) 'notes': notes,
-      });
-
-      final response = await _dio.post(
+      final requestData = notes != null ? {'delivery_notes': notes} : null;
+      final response = await dio.post(
         '/deliveries/$deliveryId/deliver',
-        data: formData,
-        options: Options(headers: await _getHeaders()),
+        data: requestData,
       );
       
-      return Delivery.fromJson(response.data['data'] as Map<String, dynamic>);
-    } on DioException catch (e) {
-      throw Exception(e.response?.data['message'] ?? 'Failed to confirm delivery');
+      if (response.data['success'] != true) {
+        throw Exception(response.data['message'] ?? 'Failed to confirm delivery');
+      }
+      
+      return response.data['data'];
+    } catch (e) {
+      throw Exception('Failed to confirm delivery: $e');
     }
   }
 
-  // Cancel delivery (only before pickup)
-  Future<Delivery> cancelDelivery({
-    required int deliveryId,
-    required String reason,
-  }) async {
+  // Cancel delivery
+  Future<void> cancelDelivery(int deliveryId, String reason) async {
     try {
-      final response = await _dio.post(
-        '/deliveries/$deliveryId/cancel',
-        data: {'reason': reason},
-        options: Options(headers: await _getHeaders()),
-      );
+      final response = await dio.post('/deliveries/$deliveryId/cancel', data: {
+        'cancellation_reason': reason,
+      });
       
-      if (response.data['success'] == true) {
-        return Delivery.fromJson(response.data['data'] as Map<String, dynamic>);
-      } else {
+      if (response.data['success'] != true) {
         throw Exception(response.data['message'] ?? 'Failed to cancel delivery');
       }
-    } on DioException catch (e) {
-      if (e.response?.statusCode == 400) {
-        throw Exception('Cannot cancel delivery after item has been picked up');
-      } else if (e.response?.statusCode == 403) {
-        throw Exception('You do not have permission to cancel this delivery');
-      }
-      throw Exception(e.response?.data['message'] ?? 'Failed to cancel delivery');
+    } catch (e) {
+      throw Exception('Failed to cancel delivery: $e');
     }
   }
 
-  // Track delivery (for buyers/sellers)
-  Future<Delivery> trackDelivery(int orderId) async {
+  // Track delivery (get real-time status)
+  Future<Map<String, dynamic>> trackDelivery(int deliveryId) async {
     try {
-      final response = await _dio.get(
-        '/orders/$orderId/delivery',
-        options: Options(headers: await _getHeaders()),
-      );
+      final response = await dio.get('/deliveries/$deliveryId/track');
       
-      return Delivery.fromJson(response.data['data'] as Map<String, dynamic>);
-    } on DioException catch (e) {
-      throw Exception(e.response?.data['message'] ?? 'Failed to track delivery');
+      if (response.data['success'] != true) {
+        throw Exception(response.data['message'] ?? 'Failed to track delivery');
+      }
+      
+      return response.data['data'];
+    } catch (e) {
+      throw Exception('Failed to track delivery: $e');
     }
   }
 }

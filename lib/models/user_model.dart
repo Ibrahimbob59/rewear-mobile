@@ -3,6 +3,7 @@ class UserModel {
   final String name;
   final String email;
   final String? phone;
+  final String? role; 
   final String userType;
   final String? profilePicture;
   final String? bio;
@@ -24,6 +25,7 @@ class UserModel {
     required this.name,
     required this.email,
     this.phone,
+    this.role,
     required this.userType,
     this.profilePicture,
     this.bio,
@@ -69,6 +71,7 @@ class UserModel {
       name: json['name'] as String,
       email: json['email'] as String,
       phone: json['phone'] as String?,
+      role: json['role'], 
       userType: json['user_type'] as String? ?? 'user',
       profilePicture: json['profile_picture'] as String?,
       bio: json['bio'] as String?,

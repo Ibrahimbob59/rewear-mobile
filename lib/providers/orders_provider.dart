@@ -1,172 +1,175 @@
 import 'package:flutter/foundation.dart';
-import '../models/order_model.dart';
 import '../services/orders_service.dart';
 
-class OrdersProvider with ChangeNotifier {
+class OrdersProvider extends ChangeNotifier {
   final OrdersService _ordersService;
+
+  bool isLoading = false;
+  bool isCreatingOrder = false;
+  String? error;
+
+  // ALL CHANGED TO Map<String, dynamic>
+  List<Map<String, dynamic>> buyerOrders = [];
+  List<Map<String, dynamic>> sellerOrders = [];
+  Map<String, dynamic>? selectedOrder;
 
   OrdersProvider(this._ordersService);
 
-  // State
-  List<Order> _buyerOrders = [];
-  List<Order> _sellerOrders = [];
-  Order? _selectedOrder;
-  bool _isLoading = false;
-  String? _error;
-
-  // Getters
-  List<Order> get buyerOrders => _buyerOrders;
-  List<Order> get sellerOrders => _sellerOrders;
-  Order? get selectedOrder => _selectedOrder;
-  bool get isLoading => _isLoading;
-  String? get error => _error;
-
-  // Filtered orders
-  List<Order> get activeBuyerOrders =>
-      _buyerOrders.where((order) => order.isActive).toList();
-  
-  List<Order> get activeSellerOrders =>
-      _sellerOrders.where((order) => order.isActive).toList();
-
-  // Create order
-  Future<Order?> createOrder({
+  // Create new order
+  Future<Map<String, dynamic>?> createOrder({
     required int itemId,
     required int deliveryAddressId,
-    required double deliveryFee,
   }) async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
-
     try {
-      final order = await _ordersService.createOrder(
+      isCreatingOrder = true;
+      error = null;
+      notifyListeners();
+
+      final orderData = await _ordersService.createOrder(
         itemId: itemId,
         deliveryAddressId: deliveryAddressId,
-        deliveryFee: deliveryFee,
       );
 
-      // Add to buyer orders
-      _buyerOrders.insert(0, order);
-      
-      _error = null;
+      isCreatingOrder = false;
       notifyListeners();
-      return order;
+
+      // Return the raw order data
+      return orderData;
     } catch (e) {
-      _error = e.toString();
-      debugPrint('Error creating order: $e');
+      error = e.toString();
+      isCreatingOrder = false;
       notifyListeners();
       return null;
-    } finally {
-      _isLoading = false;
-      notifyListeners();
     }
   }
 
-  // Load buyer orders
+  // Load buyer orders (orders I placed)
   Future<void> loadBuyerOrders() async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
-
     try {
-      _buyerOrders = await _ordersService.getBuyerOrders();
-      _error = null;
+      isLoading = true;
+      error = null;
+      notifyListeners();
+
+      buyerOrders = await _ordersService.getBuyerOrders();
+
+      isLoading = false;
+      notifyListeners();
     } catch (e) {
-      _error = e.toString();
-      debugPrint('Error loading buyer orders: $e');
-    } finally {
-      _isLoading = false;
+      error = e.toString();
+      isLoading = false;
       notifyListeners();
     }
   }
 
-  // Load seller orders
+  // Load seller orders (items I sold)
   Future<void> loadSellerOrders() async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
-
     try {
-      _sellerOrders = await _ordersService.getSellerOrders();
-      _error = null;
+      isLoading = true;
+      error = null;
+      notifyListeners();
+
+      sellerOrders = await _ordersService.getSellerOrders();
+
+      isLoading = false;
+      notifyListeners();
     } catch (e) {
-      _error = e.toString();
-      debugPrint('Error loading seller orders: $e');
-    } finally {
-      _isLoading = false;
+      error = e.toString();
+      isLoading = false;
       notifyListeners();
     }
   }
 
-  // Load single order
-  Future<void> loadOrder(int id) async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
-
+  // Load all orders
+  Future<void> loadAllOrders() async {
     try {
-      _selectedOrder = await _ordersService.getOrder(id);
-      _error = null;
+      isLoading = true;
+      error = null;
+      notifyListeners();
+
+      final orders = await _ordersService.getOrders();
+      // For now, put all in buyer orders
+      buyerOrders = orders;
+
+      isLoading = false;
+      notifyListeners();
     } catch (e) {
-      _error = e.toString();
-      debugPrint('Error loading order: $e');
-    } finally {
-      _isLoading = false;
+      error = e.toString();
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // Load single order details
+  Future<void> loadOrder(int orderId) async {
+    try {
+      isLoading = true;
+      error = null;
+      notifyListeners();
+
+      selectedOrder = await _ordersService.getOrder(orderId);
+
+      isLoading = false;
+      notifyListeners();
+    } catch (e) {
+      error = e.toString();
+      isLoading = false;
       notifyListeners();
     }
   }
 
   // Cancel order
-  Future<bool> cancelOrder(int id, {String? reason}) async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
-
+  Future<bool> cancelOrder(int orderId, String reason) async {
     try {
-      final updatedOrder = await _ordersService.cancelOrder(id, reason: reason);
+      isLoading = true;
+      error = null;
+      notifyListeners();
 
-      // Update in buyer orders
-      final buyerIndex = _buyerOrders.indexWhere((order) => order.id == id);
-      if (buyerIndex != -1) {
-        _buyerOrders[buyerIndex] = updatedOrder;
-      }
+      await _ordersService.cancelOrder(orderId, reason);
 
-      // Update in seller orders
-      final sellerIndex = _sellerOrders.indexWhere((order) => order.id == id);
-      if (sellerIndex != -1) {
-        _sellerOrders[sellerIndex] = updatedOrder;
-      }
+      // Reload orders after cancellation
+      await loadBuyerOrders();
 
-      // Update selected order
-      if (_selectedOrder?.id == id) {
-        _selectedOrder = updatedOrder;
-      }
-
-      _error = null;
+      isLoading = false;
       notifyListeners();
       return true;
     } catch (e) {
-      _error = e.toString();
-      debugPrint('Error cancelling order: $e');
+      error = e.toString();
+      isLoading = false;
       notifyListeners();
       return false;
-    } finally {
-      _isLoading = false;
-      notifyListeners();
     }
   }
 
-  // Clear error
+  // Confirm order
+  Future<bool> confirmOrder(int orderId) async {
+    try {
+      isLoading = true;
+      error = null;
+      notifyListeners();
+
+      await _ordersService.confirmOrder(orderId);
+
+      // Reload order details
+      await loadOrder(orderId);
+
+      isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      error = e.toString();
+      isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
   void clearError() {
-    _error = null;
+    error = null;
     notifyListeners();
   }
 
-  // Refresh all orders
-  Future<void> refreshOrders() async {
-    await Future.wait([
-      loadBuyerOrders(),
-      loadSellerOrders(),
-    ]);
+  void clearSelectedOrder() {
+    selectedOrder = null;
+    notifyListeners();
   }
 }

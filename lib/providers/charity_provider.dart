@@ -1,138 +1,220 @@
-import 'package:flutter/material.dart';
-import '../models/charity_model.dart';
+import 'package:flutter/foundation.dart';
 import '../services/charity_service.dart';
 
-class CharityProvider with ChangeNotifier {
+class CharityProvider extends ChangeNotifier {
   final CharityService _charityService;
+
+  bool isLoading = false;
+  String? error;
+
+  // ALL CHANGED TO Map<String, dynamic>
+  Map<String, dynamic>? charity;
+  Map<String, dynamic>? impactStats;
+  List<Map<String, dynamic>> availableDonations = [];
+  List<Map<String, dynamic>> pendingDonations = [];
+  List<Map<String, dynamic>> _claimedDonationsRaw = [];
 
   CharityProvider(this._charityService);
 
-  Charity? _charity;
-  Map<String, dynamic>? _dashboard;
-  List<DonatedItem> _availableDonations = [];
-  List<DonatedItem> _myDonations = [];
-  Map<String, dynamic>? _impactStats;
-  bool _isLoading = false;
-  String? _error;
+  bool get isCharity => charity != null;
 
-  Charity? get charity => _charity;
-  Map<String, dynamic>? get dashboard => _dashboard;
-  List<DonatedItem> get availableDonations => _availableDonations;
-  List<DonatedItem> get myDonations => _myDonations;
-  List<DonatedItem> get pendingDonations => _availableDonations;
-  List<DonatedItem> get acceptedDonations => _myDonations;
-  Map<String, dynamic>? get impactStats => _impactStats;
-  bool get isLoading => _isLoading;
-  String? get error => _error;
+  List<Map<String, dynamic>> get claimedDonations => _claimedDonationsRaw;
 
-  bool get isCharity => _charity != null || _dashboard != null;
-  int get pendingCount => _availableDonations.length;
-  int get acceptedCount => _myDonations.length;
+  // ADDED: Getters for counts
+  int get pendingCount => pendingDonations.length;
+  int get acceptedCount => claimedDonations.length;
 
-  Future<void> loadDashboard() async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
-
-    try {
-      _dashboard = await _charityService.getDashboard();
-      _isLoading = false;
-      notifyListeners();
-    } catch (e) {
-      _error = e.toString();
-      _dashboard = null;
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
-
+  // Load charity profile
   Future<void> loadCharityProfile() async {
-    await loadDashboard();
+    try {
+      isLoading = true;
+      error = null;
+      notifyListeners();
+
+      charity = await _charityService.getProfile();
+
+      isLoading = false;
+      notifyListeners();
+    } catch (e) {
+      error = e.toString();
+      isLoading = false;
+      notifyListeners();
+    }
   }
 
+  // Load impact statistics
+  Future<void> loadImpactStats() async {
+    try {
+      isLoading = true;
+      error = null;
+      notifyListeners();
+
+      impactStats = await _charityService.getImpact();
+
+      isLoading = false;
+      notifyListeners();
+    } catch (e) {
+      error = e.toString();
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // Load available donations
   Future<void> loadAvailableDonations() async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
-
     try {
-      _availableDonations = await _charityService.getAvailableDonations();
-      _isLoading = false;
+      isLoading = true;
+      error = null;
+      notifyListeners();
+
+      // FIXED: Proper casting to List<Map<String, dynamic>>
+      final items = await _charityService.getAvailableDonations();
+      availableDonations = List<Map<String, dynamic>>.from(
+        items.map((item) => item as Map<String, dynamic>)
+      );
+
+      isLoading = false;
       notifyListeners();
     } catch (e) {
-      _error = e.toString();
-      _isLoading = false;
+      error = e.toString();
+      isLoading = false;
       notifyListeners();
     }
   }
 
+  // Load pending donations (claimed but not received yet)
   Future<void> loadPendingDonations() async {
-    await loadAvailableDonations();
-  }
-
-  Future<void> loadMyDonations() async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
-
     try {
-      _myDonations = await _charityService.getMyDonations();
-      _isLoading = false;
+      isLoading = true;
+      error = null;
+      notifyListeners();
+
+      pendingDonations = await _charityService.getPendingDonations();
+
+      isLoading = false;
       notifyListeners();
     } catch (e) {
-      _error = e.toString();
-      _isLoading = false;
+      error = e.toString();
+      isLoading = false;
       notifyListeners();
     }
   }
 
-  Future<void> loadAcceptedDonations() async {
-    await loadMyDonations();
+  // Load claimed donations
+  Future<void> loadClaimedDonations() async {
+    try {
+      isLoading = true;
+      error = null;
+      notifyListeners();
+
+      _claimedDonationsRaw = await _charityService.getMyDonations();
+
+      isLoading = false;
+      notifyListeners();
+    } catch (e) {
+      error = e.toString();
+      isLoading = false;
+      notifyListeners();
+    }
   }
 
-  Future<bool> acceptDonation(int itemId) async {
+  // Claim a donation
+  Future<bool> claimDonation({
+    required int itemId,
+    required String distributionPlan,
+    required int beneficiariesCount,
+  }) async {
     try {
-      final donation = await _charityService.acceptDonation(itemId);
-      
-      _availableDonations.removeWhere((d) => d.id == itemId);
-      _myDonations.insert(0, donation);
-      
+      isLoading = true;
+      error = null;
+      notifyListeners();
+
+      await _charityService.claimDonation(
+        itemId: itemId,
+        distributionPlan: distributionPlan,
+        beneficiariesCount: beneficiariesCount,
+      );
+
+      // Refresh lists
+      await loadAvailableDonations();
+      await loadPendingDonations();
+
+      isLoading = false;
       notifyListeners();
       return true;
     } catch (e) {
-      _error = e.toString();
+      error = e.toString();
+      isLoading = false;
       notifyListeners();
       return false;
     }
   }
 
-  Future<bool> rejectDonation(int donationId, {String? reason}) async {
-    _availableDonations.removeWhere((d) => d.id == donationId);
-    notifyListeners();
-    return true;
+  // Accept donation (wrapper method)
+  Future<bool> acceptDonation(
+    int itemId,
+    String distributionPlan,
+    int beneficiariesCount,
+  ) async {
+    return await claimDonation(
+      itemId: itemId,
+      distributionPlan: distributionPlan,
+      beneficiariesCount: beneficiariesCount,
+    );
   }
 
-  Future<void> markDistributed(int orderId) async {
+  // Mark donation as distributed
+  Future<bool> markAsDistributed({
+    required int orderId,
+    required int beneficiariesCount,
+    String? notes,
+  }) async {
     try {
-      await _charityService.markDistributed(orderId);
+      isLoading = true;
+      error = null;
       notifyListeners();
+
+      await _charityService.markAsDistributed(
+        orderId: orderId,
+        beneficiariesCount: beneficiariesCount,
+        notes: notes,
+      );
+
+      // Refresh data
+      await loadPendingDonations();
+      await loadImpactStats();
+
+      isLoading = false;
+      notifyListeners();
+      return true;
     } catch (e) {
-      _error = e.toString();
+      error = e.toString();
+      isLoading = false;
       notifyListeners();
+      return false;
     }
   }
 
-  Future<void> loadImpactStats() async {
-    try {
-      _impactStats = await _charityService.getImpactStats();
-      notifyListeners();
-    } catch (e) {
-      print('Error loading impact stats: $e');
-    }
+  // Mark distributed (wrapper method)
+  Future<bool> markDistributed(
+    int orderId,
+    int beneficiariesCount, {
+    String? notes,
+  }) async {
+    return await markAsDistributed(
+      orderId: orderId,
+      beneficiariesCount: beneficiariesCount,
+      notes: notes,
+    );
+  }
+
+  // Get impact statistics (wrapper method)
+  Future<Map<String, dynamic>> getImpactStats() async {
+    return await _charityService.getImpactStats();
   }
 
   void clearError() {
-    _error = null;
+    error = null;
     notifyListeners();
   }
 }

@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../providers/delivery_provider.dart';
-import '../../widgets/delivery/delivery_status_stepper.dart';
-import '../../widgets/delivery/delivery_map_widget.dart';
 
 class OrderTrackingScreen extends StatefulWidget {
-  final String orderId;
-
+  final int orderId;
+  
   const OrderTrackingScreen({
     super.key,
     required this.orderId,
@@ -22,27 +19,20 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<DeliveryProvider>().trackDelivery(int.parse(widget.orderId));
+      _loadDeliveryInfo();
     });
   }
 
-  void _callDriver(String phone) async {
-    final url = Uri.parse('tel:$phone');
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url);
-    } else {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not open phone dialer')),
-      );
-    }
+  Future<void> _loadDeliveryInfo() async {
+    // Try to load delivery info for this order
+    // This is a placeholder - you'd need to get delivery ID from order
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Track Delivery'),
+        title: const Text('Track Order'),
       ),
       body: Consumer<DeliveryProvider>(
         builder: (context, deliveryProvider, child) {
@@ -50,214 +40,214 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
             return const Center(child: CircularProgressIndicator());
           }
 
-          final delivery = deliveryProvider.selectedDelivery;
-          if (delivery == null) {
-            return const Center(child: Text('Delivery information not available'));
+          if (deliveryProvider.error != null) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.error_outline, size: 60, color: Colors.red),
+                  const SizedBox(height: 16),
+                  Text(deliveryProvider.error!),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: _loadDeliveryInfo,
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
+            );
           }
 
-          return SingleChildScrollView(
-            child: Column(
-              children: [
-                // Map
-                if (delivery.driver != null && 
-                    delivery.pickupLatitude != null && 
-                    delivery.pickupLongitude != null)
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: DeliveryMapWidget(
-                      delivery: delivery,
-                      currentPosition: null,
-                    ),
-                  ),
+          // FIXED: Changed from selectedDelivery to currentDelivery
+          final delivery = deliveryProvider.currentDelivery;
 
-                // Status Stepper
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.05), // ✅ FIXED deprecation
-                          blurRadius: 10,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: DeliveryStatusStepper(delivery: delivery),
-                  ),
-                ),
-
-                // Driver Info (if assigned)
-                if (delivery.driver != null) ...[
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Your Driver',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.05), // ✅ FIXED deprecation
-                                blurRadius: 10,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            children: [
-                              CircleAvatar(
-                                radius: 30,
-                                backgroundColor: Colors.blue[100],
-                                backgroundImage: delivery.driver!.profilePicture != null
-                                    ? NetworkImage(delivery.driver!.profilePicture!)
-                                    : null,
-                                child: delivery.driver!.profilePicture == null
-                                    ? const Icon(Icons.person, size: 30)
-                                    : null,
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      delivery.driver!.name,
-                                      style: const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    if (delivery.driver!.vehicleType != null)
-                                      Text(
-                                        delivery.driver!.vehicleType!,
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          color: Colors.grey[600],
-                                        ),
-                                      ),
-                                    if (delivery.driver!.rating != null)
-                                      Row(
-                                        children: [
-                                          const Icon(Icons.star, size: 16, color: Colors.amber),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            delivery.driver!.rating!.toStringAsFixed(1),
-                                            style: const TextStyle(fontSize: 14),
-                                          ),
-                                        ],
-                                      ),
-                                  ],
-                                ),
-                              ),
-                              if (delivery.driver!.phone != null)
-                                IconButton(
-                                  onPressed: () => _callDriver(delivery.driver!.phone!), // ✅ FIXED
-                                  icon: const Icon(Icons.phone),
-                                  style: IconButton.styleFrom(
-                                    backgroundColor: Colors.green[50],
-                                    foregroundColor: Colors.green[700],
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
+          if (delivery == null) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.local_shipping_outlined,
+                    size: 80,
+                    color: Colors.grey[300],
                   ),
                   const SizedBox(height: 16),
-                ],
-
-                // Delivery Info
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.05), // ✅ FIXED deprecation
-                          blurRadius: 10,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Delivery Details',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        _buildInfoRow(
-                          icon: Icons.location_on,
-                          label: 'Pickup',
-                          value: delivery.pickupAddress ?? 'N/A', // ✅ FIXED
-                        ),
-                        const Divider(height: 24),
-                        _buildInfoRow(
-                          icon: Icons.home,
-                          label: 'Delivery',
-                          value: delivery.deliveryAddress ?? 'N/A', // ✅ FIXED
-                        ),
-                        if (delivery.distanceKm != null) ...[
-                          const Divider(height: 24),
-                          _buildInfoRow(
-                            icon: Icons.straighten,
-                            label: 'Distance',
-                            value: '${delivery.distanceKm!.toStringAsFixed(1)} km',
-                          ),
-                        ],
-                        const Divider(height: 24),
-                        _buildInfoRow(
-                          icon: Icons.attach_money,
-                          label: 'Delivery Fee',
-                          value: delivery.deliveryFeeDisplay,
-                        ),
-                      ],
+                  const Text(
+                    'No delivery information',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Delivery tracking will appear here once assigned',
+                    style: TextStyle(color: Colors.grey),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            );
+          }
 
-                const SizedBox(height: 32),
-              ],
-            ),
-          );
+          return _buildTrackingView(delivery);
         },
       ),
     );
   }
 
-  Widget _buildInfoRow({
-    required IconData icon,
-    required String label,
-    required String value,
-  }) {
+  Widget _buildTrackingView(Map<String, dynamic> delivery) {
+    final status = delivery['status'] ?? 'pending';
+    final driverName = delivery['driver']?['name'] ?? 'Not assigned';
+    final driverPhone = delivery['driver']?['phone'] ?? '';
+    final pickupAddress = delivery['pickup_address'] ?? '';
+    final deliveryAddress = delivery['delivery_address'] ?? '';
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Status Card
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: _getStatusColors(status),
+              ),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              children: [
+                Icon(
+                  _getStatusIcon(status),
+                  color: Colors.white,
+                  size: 60,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  _formatStatus(status),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  _getStatusMessage(status),
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 14,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          // Driver Info (if assigned)
+          if (status != 'pending') ...[
+            const Text(
+              'Driver Information',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Card(
+              child: ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: Theme.of(context).primaryColor,
+                  child: const Icon(Icons.person, color: Colors.white),
+                ),
+                title: Text(driverName),
+                subtitle: driverPhone.isNotEmpty 
+                    ? Text(driverPhone)
+                    : const Text('Contact info not available'),
+                trailing: driverPhone.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.phone),
+                        onPressed: () {
+                          // Call driver
+                        },
+                      )
+                    : null,
+              ),
+            ),
+            const SizedBox(height: 24),
+          ],
+
+          // Addresses
+          const Text(
+            'Delivery Route',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  _buildAddressRow(
+                    Icons.location_on_outlined,
+                    'Pickup',
+                    pickupAddress,
+                    status == 'assigned' || status == 'pending',
+                  ),
+                  const SizedBox(height: 16),
+                  Container(
+                    width: 2,
+                    height: 40,
+                    color: Colors.grey[300],
+                    margin: const EdgeInsets.only(left: 10),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildAddressRow(
+                    Icons.location_on,
+                    'Delivery',
+                    deliveryAddress,
+                    status == 'delivered' || status == 'completed',
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          // Refresh Button
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: _loadDeliveryInfo,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Refresh Status'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAddressRow(
+    IconData icon,
+    String label,
+    String address,
+    bool isActive,
+  ) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 20, color: Colors.grey[600]),
+        Icon(
+          icon,
+          color: isActive ? Colors.green : Colors.grey,
+          size: 28,
+        ),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
@@ -273,10 +263,11 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
               ),
               const SizedBox(height: 4),
               Text(
-                value,
-                style: const TextStyle(
+                address.isNotEmpty ? address : 'Address not available',
+                style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
+                  color: isActive ? Colors.black : Colors.grey,
                 ),
               ),
             ],
@@ -284,5 +275,77 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
         ),
       ],
     );
+  }
+
+  List<Color> _getStatusColors(String status) {
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return [Colors.orange[400]!, Colors.orange[600]!];
+      case 'assigned':
+        return [Colors.blue[400]!, Colors.blue[600]!];
+      case 'in_transit':
+      case 'picked_up':
+        return [Colors.purple[400]!, Colors.purple[600]!];
+      case 'delivered':
+      case 'completed':
+        return [Colors.green[400]!, Colors.green[600]!];
+      default:
+        return [Colors.grey[400]!, Colors.grey[600]!];
+    }
+  }
+
+  IconData _getStatusIcon(String status) {
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return Icons.pending;
+      case 'assigned':
+        return Icons.assignment_ind;
+      case 'in_transit':
+      case 'picked_up':
+        return Icons.local_shipping;
+      case 'delivered':
+      case 'completed':
+        return Icons.check_circle;
+      default:
+        return Icons.info;
+    }
+  }
+
+  String _formatStatus(String status) {
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return 'Pending';
+      case 'assigned':
+        return 'Driver Assigned';
+      case 'in_transit':
+        return 'In Transit';
+      case 'picked_up':
+        return 'Picked Up';
+      case 'delivered':
+        return 'Delivered';
+      case 'completed':
+        return 'Completed';
+      default:
+        return status;
+    }
+  }
+
+  String _getStatusMessage(String status) {
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return 'Waiting for driver assignment';
+      case 'assigned':
+        return 'Driver has been assigned to your delivery';
+      case 'in_transit':
+        return 'Your package is on the way';
+      case 'picked_up':
+        return 'Driver has picked up your package';
+      case 'delivered':
+        return 'Your package has been delivered';
+      case 'completed':
+        return 'Delivery completed successfully';
+      default:
+        return 'Tracking your delivery';
+    }
   }
 }

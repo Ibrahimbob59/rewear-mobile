@@ -65,7 +65,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         final order = await ordersProvider.createOrder(
           itemId: cartItem.item.id,
           deliveryAddressId: _selectedAddress!.id,
-          deliveryFee: cartItem.deliveryFee,
         );
 
         if (order == null) {

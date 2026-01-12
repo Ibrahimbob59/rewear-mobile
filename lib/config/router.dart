@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+
 import '../screens/auth/login_screen.dart';
 import '../screens/auth/register_screen.dart';
 import '../screens/auth/otp_verification_screen.dart';
@@ -29,52 +31,88 @@ import '../screens/charity/charity_home_screen.dart';
 import '../screens/charity/charity_donations_screen.dart';
 import '../screens/charity/charity_claimed_screen.dart';
 import '../screens/charity/charity_donate_screen.dart';
+
 import '../services/storage_service.dart';
+import '../providers/auth_provider.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
 final GlobalKey<NavigatorState> _shellNavigatorKey = GlobalKey<NavigatorState>();
 
 class AppRouter {
   static final StorageService _storageService = StorageService();
-  
+
   static int _getIndexFromLocation(String location) {
-    if (location.startsWith('/cart')) {
-      return 1;
-    } else if (location.startsWith('/orders')) {
-      return 2;
-    } else if (location.startsWith('/profile')) {
-      return 3;
-    }
+    if (location.startsWith('/cart')) return 1;
+    if (location.startsWith('/orders')) return 2;
+    if (location.startsWith('/profile')) return 3;
     return 0;
   }
-  
+
+  static bool _isAuthPage(String location) {
+    return location == '/login' ||
+        location == '/register' ||
+        location.startsWith('/otp');
+  }
+
+  static bool _needsAuth(String location) {
+    return location == '/create-item' ||
+        location.startsWith('/checkout') ||
+        (location.startsWith('/orders/') && location != '/orders') ||
+        location.startsWith('/profile/edit') ||
+        location == '/profile/change-password' ||
+        location == '/selling' ||
+        location.startsWith('/driver') ||
+        location.startsWith('/charity');
+  }
+
   static final GoRouter router = GoRouter(
     navigatorKey: _rootNavigatorKey,
+
+    // Keep your current behavior (home is accessible even if not logged in)
     initialLocation: '/',
+
     redirect: (BuildContext context, GoRouterState state) async {
       await _storageService.init();
-      final bool isLoggedIn = await _storageService.hasAccessToken();
+
       final String location = state.matchedLocation;
 
-      final bool needsAuth = location == '/create-item' ||
-                             location.startsWith('/checkout') ||
-                             (location.startsWith('/orders/') && location != '/orders') ||
-                             location.startsWith('/profile/edit') ||
-                             location == '/profile/change-password' ||
-                             location == '/selling' ||
-                             location.startsWith('/driver') ||
-                             location.startsWith('/charity');
+      // Login state (source of truth: tokens in storage)
+      final bool isLoggedIn = await _storageService.hasAccessToken();
 
-      if (!isLoggedIn && needsAuth) {
+      // Try to read AuthProvider user (may be null early)
+      AuthProvider? authProvider;
+      try {
+        authProvider = context.read<AuthProvider>();
+      } catch (_) {
+        authProvider = null;
+      }
+
+      final user = authProvider?.user;
+
+      // 1) If not logged in and trying to access protected route -> go login
+      if (!isLoggedIn && _needsAuth(location)) {
         return '/login';
       }
 
-      if (isLoggedIn && (location == '/login' || location == '/register')) {
+      // 2) If logged in and on login/register/otp -> redirect based on role
+      if (isLoggedIn && _isAuthPage(location)) {
+        // Charity users -> charity home (your real route)
+        if (user?.role == 'charity') {
+          return '/charity/home';
+        }
+
+        // Verified drivers -> driver dashboard
+        if (user?.isDriver == true && user?.driverVerified == true) {
+          return '/driver/dashboard';
+        }
+
+        // Regular users -> home (your real route is '/')
         return '/';
       }
 
       return null;
     },
+
     routes: [
       ShellRoute(
         navigatorKey: _shellNavigatorKey,
@@ -116,9 +154,17 @@ class AppRouter {
           ),
         ],
       ),
-      
-      GoRoute(path: '/login', name: 'login', builder: (context, state) => const LoginScreen()),
-      GoRoute(path: '/register', name: 'register', builder: (context, state) => const RegisterScreen()),
+
+      GoRoute(
+        path: '/login',
+        name: 'login',
+        builder: (context, state) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: '/register',
+        name: 'register',
+        builder: (context, state) => const RegisterScreen(),
+      ),
       GoRoute(
         path: '/otp-verification',
         name: 'otp-verification',
@@ -127,11 +173,13 @@ class AppRouter {
           return OTPVerificationScreen(email: email);
         },
       ),
+
       GoRoute(path: '/profile/edit', builder: (context, state) => const ProfileEditScreen()),
       GoRoute(path: '/profile/change-password', builder: (context, state) => const ChangePasswordScreen()),
       GoRoute(path: '/profile/deactivate', builder: (context, state) => const DeactivateAccountScreen()),
       GoRoute(path: '/addresses', name: 'addresses', builder: (context, state) => const AddressesScreen()),
       GoRoute(path: '/add-address', name: 'add-address', builder: (context, state) => const AddAddressScreen()),
+
       GoRoute(
         path: '/item/:id',
         builder: (context, state) {
@@ -143,36 +191,46 @@ class AppRouter {
       GoRoute(path: '/search', builder: (context, state) => const SearchScreen()),
       GoRoute(path: '/selling', builder: (context, state) => const SellingScreen()),
       GoRoute(path: '/checkout', builder: (context, state) => const CheckoutScreen()),
+
+      // ✅ FIX 1: Order Detail Route (String -> int)
       GoRoute(
         path: '/orders/:id',
         builder: (context, state) {
-          final id = state.pathParameters['id']!;
-          return OrderDetailScreen(orderId: id);
+          final orderId = int.parse(state.pathParameters['id'] ?? '0');
+          return OrderDetailScreen(orderId: orderId);
         },
       ),
+
       GoRoute(path: '/favorites', builder: (context, state) => const FavoritesScreen()),
+
       GoRoute(path: '/driver-application', builder: (context, state) => const DriverApplicationScreen()),
       GoRoute(path: '/driver/dashboard', builder: (context, state) => const DriverDashboardScreen()),
+
+      // ✅ FIX 2: Active Delivery Route (String -> int)
       GoRoute(
         path: '/driver/delivery/:deliveryId',
         builder: (context, state) {
-          final deliveryId = state.pathParameters['deliveryId']!;
+          final deliveryId = int.parse(state.pathParameters['deliveryId'] ?? '0');
           return ActiveDeliveryScreen(deliveryId: deliveryId);
         },
       ),
+
       GoRoute(path: '/driver/history', builder: (context, state) => const DeliveryHistoryScreen()),
+
       GoRoute(
         path: '/track-order/:orderId',
         builder: (context, state) {
-          final orderId = state.pathParameters['orderId']!;
+          final orderId = int.parse(state.pathParameters['orderId'] ?? '0');
           return OrderTrackingScreen(orderId: orderId);
         },
       ),
+
       GoRoute(path: '/charity/home', builder: (context, state) => const CharityHomeScreen()),
       GoRoute(path: '/charity/donations', builder: (context, state) => const CharityDonationsScreen()),
       GoRoute(path: '/charity/claimed', builder: (context, state) => const CharityClaimedScreen()),
       GoRoute(path: '/charity/donate', builder: (context, state) => const CharityDonateScreen()),
     ],
+
     errorBuilder: (context, state) => Scaffold(
       body: Center(
         child: Column(

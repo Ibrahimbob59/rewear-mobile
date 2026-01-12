@@ -26,7 +26,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       await authProvider.initialize();
       
       final ordersProvider = context.read<OrdersProvider>();
-      ordersProvider.refreshOrders();
+      ordersProvider.loadAllOrders();  
       
       final itemsProvider = context.read<ItemsProvider>();
       itemsProvider.loadMyListings();

@@ -1,121 +1,120 @@
-import 'dart:async';
-import 'dart:io';
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
-import '../models/delivery_model.dart';
+
 import '../services/delivery_service.dart';
 import '../services/location_service.dart';
 
-class DeliveryProvider with ChangeNotifier {
+class DeliveryProvider extends ChangeNotifier {
   final DeliveryService _deliveryService;
   final LocationService _locationService;
 
+  bool isLoading = false;
+  String? error;
+
+  // ALL CHANGED TO Map<String, dynamic>
+  List<Map<String, dynamic>> availableDeliveries = [];
+  List<Map<String, dynamic>> activeDeliveries = [];
+  List<Map<String, dynamic>> _deliveryHistory = [];
+  Map<String, dynamic>? currentDelivery;
+  Map<String, dynamic>? _currentDeliveryData;
+
+  // ✅ OLD SIGNATURE (2 args) RESTORED
   DeliveryProvider(this._deliveryService, this._locationService);
 
-  // State
-  List<Delivery> _availableDeliveries = [];
-  List<Delivery> _activeDeliveries = [];
-  List<Delivery> _deliveryHistory = [];
-  Delivery? _selectedDelivery;
-  bool _isLoading = false;
-  bool _isLoadingMore = false;
-  String? _error;
+  List<Map<String, dynamic>> get deliveryHistory => _deliveryHistory;
 
-  // Location tracking
-  StreamSubscription<Position>? _locationSubscription;
-  Position? _currentPosition;
+  // Optional getter if you need it elsewhere
+  Map<String, dynamic>? get currentDeliveryData => _currentDeliveryData;
 
-  // Getters
-  List<Delivery> get availableDeliveries => _availableDeliveries;
-  List<Delivery> get activeDeliveries => _activeDeliveries;
-  List<Delivery> get deliveryHistory => _deliveryHistory;
-  Delivery? get selectedDelivery => _selectedDelivery;
-  bool get isLoading => _isLoading;
-  bool get isLoadingMore => _isLoadingMore;
-  String? get error => _error;
-  Position? get currentPosition => _currentPosition;
-
-  // Load available deliveries
+  // Load available deliveries for drivers
   Future<void> loadAvailableDeliveries() async {
     try {
-      _isLoading = true;
-      _error = null;
+      isLoading = true;
+      error = null;
       notifyListeners();
 
-      _availableDeliveries = await _deliveryService.getAvailableDeliveries();
-      
-      _isLoading = false;
+      availableDeliveries = await _deliveryService.getAvailableDeliveries();
+
+      isLoading = false;
       notifyListeners();
     } catch (e) {
-      _error = e.toString();
-      _isLoading = false;
+      error = e.toString();
+      isLoading = false;
       notifyListeners();
     }
   }
 
-  // Load active deliveries
+  // Load active deliveries for current driver
   Future<void> loadActiveDeliveries() async {
     try {
-      _isLoading = true;
-      _error = null;
+      isLoading = true;
+      error = null;
       notifyListeners();
 
-      _activeDeliveries = await _deliveryService.getActiveDeliveries();
-      
-      _isLoading = false;
+      activeDeliveries = await _deliveryService.getActiveDeliveries();
+
+      isLoading = false;
       notifyListeners();
     } catch (e) {
-      _error = e.toString();
-      _isLoading = false;
+      error = e.toString();
+      isLoading = false;
       notifyListeners();
     }
   }
 
   // Load delivery history
-  Future<void> loadDeliveryHistory({int page = 1}) async {
+  Future<void> loadDeliveryHistory() async {
     try {
-      if (page == 1) {
-        _isLoading = true;
-        _deliveryHistory = [];
-      } else {
-        _isLoadingMore = true;
-      }
-      _error = null;
+      isLoading = true;
+      error = null;
       notifyListeners();
 
-      final newDeliveries = await _deliveryService.getDeliveryHistory(page: page);
-      
-      if (page == 1) {
-        _deliveryHistory = newDeliveries;
-      } else {
-        _deliveryHistory.addAll(newDeliveries);
-      }
-      
-      _isLoading = false;
-      _isLoadingMore = false;
+      _deliveryHistory = await _deliveryService.getDeliveryHistory();
+
+      isLoading = false;
       notifyListeners();
     } catch (e) {
-      _error = e.toString();
-      _isLoading = false;
-      _isLoadingMore = false;
+      error = e.toString();
+      isLoading = false;
       notifyListeners();
     }
   }
 
-  // Load single delivery
-  Future<void> loadDelivery(int id) async {
+  // Load more history (pagination)
+  Future<void> loadMoreHistory() async {
     try {
-      _isLoading = true;
-      _error = null;
+      if (isLoading) return;
+
+      isLoading = true;
       notifyListeners();
 
-      _selectedDelivery = await _deliveryService.getDelivery(id);
-      
-      _isLoading = false;
+      final moreHistory = await _deliveryService.getDeliveryHistory();
+      _deliveryHistory.addAll(moreHistory);
+
+      isLoading = false;
       notifyListeners();
     } catch (e) {
-      _error = e.toString();
-      _isLoading = false;
+      error = e.toString();
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // Load single delivery details
+  Future<void> loadDelivery(int deliveryId) async {
+    try {
+      isLoading = true;
+      error = null;
+      notifyListeners();
+
+      currentDelivery = await _deliveryService.getDelivery(deliveryId);
+      _currentDeliveryData = currentDelivery;
+
+      isLoading = false;
+      notifyListeners();
+    } catch (e) {
+      error = e.toString();
+      isLoading = false;
       notifyListeners();
     }
   }
@@ -123,191 +122,162 @@ class DeliveryProvider with ChangeNotifier {
   // Accept delivery
   Future<bool> acceptDelivery(int deliveryId) async {
     try {
-      _isLoading = true;
-      _error = null;
+      isLoading = true;
+      error = null;
       notifyListeners();
 
-      final delivery = await _deliveryService.acceptDelivery(deliveryId);
-      
-      // Remove from available, add to active
-      _availableDeliveries.removeWhere((d) => d.id == deliveryId);
-      _activeDeliveries.add(delivery);
-      _selectedDelivery = delivery;
-      
-      _isLoading = false;
+      await _deliveryService.acceptDelivery(deliveryId);
+
+      // Reload active deliveries and current delivery
+      await loadActiveDeliveries();
+      await loadDelivery(deliveryId);
+
+      isLoading = false;
       notifyListeners();
       return true;
     } catch (e) {
-      _error = e.toString();
-      _isLoading = false;
+      error = e.toString();
+      isLoading = false;
       notifyListeners();
       return false;
     }
   }
 
   // Confirm pickup
-  Future<bool> confirmPickup({
-    required int deliveryId,
-    required File proofImage,
+  Future<bool> confirmPickup(
+    int deliveryId, {
+    String? proofImage,
     String? notes,
   }) async {
     try {
-      _isLoading = true;
-      _error = null;
+      isLoading = true;
+      error = null;
       notifyListeners();
 
-      final delivery = await _deliveryService.confirmPickup(
-        deliveryId: deliveryId,
-        proofImage: proofImage,
-        notes: notes,
-      );
-      
-      // Update in active deliveries
-      final index = _activeDeliveries.indexWhere((d) => d.id == deliveryId);
-      if (index != -1) {
-        _activeDeliveries[index] = delivery;
-      }
-      _selectedDelivery = delivery;
-      
-      _isLoading = false;
+      await _deliveryService.confirmPickup(deliveryId);
+
+      // Reload delivery details
+      currentDelivery = await _deliveryService.getDelivery(deliveryId);
+      _currentDeliveryData = currentDelivery;
+      await loadActiveDeliveries();
+
+      isLoading = false;
       notifyListeners();
       return true;
     } catch (e) {
-      _error = e.toString();
-      _isLoading = false;
+      error = e.toString();
+      isLoading = false;
       notifyListeners();
       return false;
     }
   }
 
   // Confirm delivery
-  Future<bool> confirmDelivery({
-    required int deliveryId,
-    required File proofImage,
+  Future<bool> confirmDelivery(
+    int deliveryId, {
+    String? proofImage,
     double? codCollected,
     String? notes,
   }) async {
     try {
-      _isLoading = true;
-      _error = null;
+      isLoading = true;
+      error = null;
       notifyListeners();
 
-      final delivery = await _deliveryService.confirmDelivery(
-        deliveryId: deliveryId,
-        proofImage: proofImage,
-        codCollected: codCollected,
-        notes: notes,
-      );
-      
-      // Remove from active deliveries
-      _activeDeliveries.removeWhere((d) => d.id == deliveryId);
-      _selectedDelivery = delivery;
-      
-      _isLoading = false;
+      await _deliveryService.confirmDelivery(deliveryId, notes: notes);
+
+      // Reload delivery details
+      currentDelivery = await _deliveryService.getDelivery(deliveryId);
+      _currentDeliveryData = currentDelivery;
+      await loadActiveDeliveries();
+
+      isLoading = false;
       notifyListeners();
       return true;
     } catch (e) {
-      _error = e.toString();
-      _isLoading = false;
+      error = e.toString();
+      isLoading = false;
       notifyListeners();
       return false;
     }
   }
 
-  // Cancel delivery (only before pickup)
-  Future<bool> cancelDelivery({
-    required int deliveryId,
+  // Cancel delivery
+  Future<bool> cancelDelivery(
+    int deliveryId, {
     required String reason,
   }) async {
     try {
-      _isLoading = true;
-      _error = null;
+      isLoading = true;
+      error = null;
       notifyListeners();
 
-      final delivery = await _deliveryService.cancelDelivery(
-        deliveryId: deliveryId,
-        reason: reason,
-      );
-      
-      // Remove from active deliveries
-      _activeDeliveries.removeWhere((d) => d.id == deliveryId);
-      _selectedDelivery = delivery;
-      
-      _isLoading = false;
+      await _deliveryService.cancelDelivery(deliveryId, reason);
+
+      // Clear current delivery
+      currentDelivery = null;
+      _currentDeliveryData = null;
+
+      // Reload lists
+      await loadActiveDeliveries();
+      await loadAvailableDeliveries();
+
+      isLoading = false;
       notifyListeners();
       return true;
     } catch (e) {
-      _error = e.toString();
-      _isLoading = false;
+      error = e.toString();
+      isLoading = false;
       notifyListeners();
       return false;
     }
   }
 
-  // Check if delivery can be cancelled
-  bool canCancelDelivery(Delivery delivery) {
-    return delivery.canBeCancelled;
-  }
-
-  // Track delivery for order
-  Future<void> trackDelivery(int orderId) async {
+  // Track delivery (real-time)
+  Future<void> trackDelivery(int deliveryId) async {
     try {
-      _isLoading = true;
-      _error = null;
-      notifyListeners();
-
-      _selectedDelivery = await _deliveryService.trackDelivery(orderId);
-      
-      _isLoading = false;
+      currentDelivery = await _deliveryService.trackDelivery(deliveryId);
+      _currentDeliveryData = currentDelivery;
       notifyListeners();
     } catch (e) {
-      _error = e.toString();
-      _isLoading = false;
+      error = e.toString();
       notifyListeners();
     }
   }
 
-  // Location tracking
-  Future<void> startLocationTracking(int deliveryId) async {
+  // Get current location
+  Future<Position?> getCurrentLocation() async {
     try {
-      _locationSubscription?.cancel();
-      
-      final hasPermission = await _locationService.requestPermission();
-      if (hasPermission == false) {  // ✅ FIXED - was !hasPermission
-        _error = 'Location permission denied';
-        notifyListeners();
-        return;
+      LocationPermission permission = await Geolocator.checkPermission();
+
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        permission = await Geolocator.requestPermission();
+
+        if (permission == LocationPermission.denied ||
+            permission == LocationPermission.deniedForever) {
+          error = 'Location permission denied';
+          notifyListeners();
+          return null;
+        }
       }
 
-      _locationSubscription = Geolocator.getPositionStream(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.high,
-          distanceFilter: 10,
-        ),
-      ).listen((Position position) {
-        _currentPosition = position;
-        notifyListeners();
-      });
+      return await Geolocator.getCurrentPosition();
     } catch (e) {
-      _error = e.toString();
+      error = e.toString();
       notifyListeners();
+      return null;
     }
-  }
-
-  void stopLocationTracking() {
-    _locationSubscription?.cancel();
-    _locationSubscription = null;
-    _currentPosition = null;
   }
 
   void clearError() {
-    _error = null;
+    error = null;
     notifyListeners();
   }
 
-  @override
-  void dispose() {
-    stopLocationTracking();
-    super.dispose();
+  void clearCurrentDelivery() {
+    currentDelivery = null;
+    _currentDeliveryData = null;
+    notifyListeners();
   }
 }

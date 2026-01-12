@@ -1,116 +1,166 @@
-import 'dart:io';
-import 'package:flutter/material.dart';
-import '../models/driver_model.dart';
+import 'package:flutter/foundation.dart';
 import '../services/driver_service.dart';
 
-class DriverProvider with ChangeNotifier {
+class DriverProvider extends ChangeNotifier {
   final DriverService _driverService;
+
+  bool isLoading = false;
+  String? error;
+
+  // ALL CHANGED TO Map<String, dynamic>
+  Map<String, dynamic>? _applicationData;
+  Map<String, dynamic>? dashboardStats;
+  List<Map<String, dynamic>> availableDeliveries = [];
+  List<Map<String, dynamic>> myDeliveries = [];
+  Map<String, dynamic>? earnings;
 
   DriverProvider(this._driverService);
 
-  Driver? _driver;
-  Map<String, dynamic>? _dashboard;
-  Map<String, dynamic>? _earnings;
-  Map<String, dynamic>? _application;
-  bool _isLoading = false;
-  String? _error;
+  // Getters
+  Map<String, dynamic>? get applicationData => _applicationData;
+  String? get applicationStatus => _applicationData?['status'];
+  bool get hasApplication => _applicationData != null;
 
-  Driver? get driver => _driver;
-  Map<String, dynamic>? get dashboard => _dashboard;
-  Map<String, dynamic>? get earnings => _earnings;
-  Map<String, dynamic>? get application => _application;
-  bool get isLoading => _isLoading;
-  String? get error => _error;
-
-  bool get isDriver => _driver != null;
-  bool get isPending => _driver?.isPending ?? false;
-  bool get isApproved => _driver?.isApproved ?? false;
-  bool get isAvailable => _driver?.isAvailable ?? false;
-  bool get isRejected => _driver?.isRejected ?? false;
-
-  Future<bool> applyAsDriver({
-    required String vehicleType,
-    required String vehicleNumber,
-    required String licenseNumber,
-    required File licenseImage,
-    required File vehicleImage,
-  }) async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
-
-    try {
-      _driver = await _driverService.applyAsDriver(
-        vehicleType: vehicleType,
-        vehicleNumber: vehicleNumber,
-        licenseNumber: licenseNumber,
-        licenseImage: licenseImage,
-        vehicleImage: vehicleImage,
-      );
-      _isLoading = false;
-      notifyListeners();
-      return true;
-    } catch (e) {
-      _error = e.toString();
-      _isLoading = false;
-      notifyListeners();
-      return false;
-    }
-  }
-
-  Future<void> loadDashboard() async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
-
-    try {
-      _dashboard = await _driverService.getDashboard();
-      _isLoading = false;
-      notifyListeners();
-    } catch (e) {
-      _error = e.toString();
-      _dashboard = null;
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
-
+  // Load my driver application
   Future<void> loadMyApplication() async {
     try {
-      _application = await _driverService.getMyApplication();
+      isLoading = true;
+      error = null;
+      notifyListeners();
+
+      final applicationData = await _driverService.getMyApplication();
+      
+      // Store as raw data instead of Driver object
+      _applicationData = applicationData;
+
+      isLoading = false;
       notifyListeners();
     } catch (e) {
-      print('Error loading application: $e');
+      error = e.toString();
+      isLoading = false;
+      notifyListeners();
     }
   }
 
+  // Check driver eligibility
   Future<Map<String, dynamic>?> checkEligibility() async {
     try {
-      return await _driverService.checkEligibility();
+      isLoading = true;
+      error = null;
+      notifyListeners();
+
+      final eligibility = await _driverService.checkEligibility();
+
+      isLoading = false;
+      notifyListeners();
+      return eligibility;
     } catch (e) {
-      _error = e.toString();
+      error = e.toString();
+      isLoading = false;
       notifyListeners();
       return null;
     }
   }
 
-  Future<void> loadEarnings({String? period}) async {
-    _isLoading = true;
-    notifyListeners();
-
+  // Load driver dashboard
+  Future<void> loadDashboard() async {
     try {
-      _earnings = await _driverService.getEarnings(period: period);
-      _isLoading = false;
+      isLoading = true;
+      error = null;
+      notifyListeners();
+
+      dashboardStats = await _driverService.getDashboard();
+
+      isLoading = false;
       notifyListeners();
     } catch (e) {
-      _error = e.toString();
-      _isLoading = false;
+      error = e.toString();
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // Load available deliveries
+  Future<void> loadAvailableDeliveries() async {
+    try {
+      isLoading = true;
+      error = null;
+      notifyListeners();
+
+      availableDeliveries = await _driverService.getAvailableDeliveries();
+
+      isLoading = false;
+      notifyListeners();
+    } catch (e) {
+      error = e.toString();
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // Load my deliveries
+  Future<void> loadMyDeliveries({String? status}) async {
+    try {
+      isLoading = true;
+      error = null;
+      notifyListeners();
+
+      myDeliveries = await _driverService.getMyDeliveries(status: status);
+
+      isLoading = false;
+      notifyListeners();
+    } catch (e) {
+      error = e.toString();
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // Accept delivery
+  Future<bool> acceptDelivery(int deliveryId) async {
+    try {
+      isLoading = true;
+      error = null;
+      notifyListeners();
+
+      await _driverService.acceptDelivery(deliveryId);
+      
+      // Reload dashboard and deliveries
+      await loadDashboard();
+      await loadAvailableDeliveries();
+      await loadMyDeliveries();
+
+      isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      error = e.toString();
+      isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  // Load earnings
+  Future<void> loadEarnings({String? period}) async {
+    try {
+      isLoading = true;
+      error = null;
+      notifyListeners();
+
+      earnings = await _driverService.getEarnings(period: period);
+
+      isLoading = false;
+      notifyListeners();
+    } catch (e) {
+      error = e.toString();
+      isLoading = false;
       notifyListeners();
     }
   }
 
   void clearError() {
-    _error = null;
+    error = null;
     notifyListeners();
   }
 }
