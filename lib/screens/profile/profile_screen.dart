@@ -53,6 +53,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 if (isLoggedIn) ...[
                   _buildStatisticsGrid(context),
                   const SizedBox(height: 24),
+                  // ✅ NEW: Role-based dashboard buttons
+                  if (user != null) _buildRoleDashboards(context, user),
                   _buildSettingsMenu(context),
                   const SizedBox(height: 24),
                   _buildLogoutButton(context, authProvider),
@@ -149,14 +151,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       backgroundColor: Color(0xFFE0E0E0),
                       child: Icon(
                         Icons.person,
-                        size: 50,
-                        color: Colors.grey,
+                        size: 48,
+                        color: Colors.white,
                       ),
                     ),
             ),
             const SizedBox(height: 16),
             Text(
-              isLoggedIn ? (user?.name ?? 'User') : 'Guest User',
+              isLoggedIn && user != null ? user.name ?? 'User' : 'Guest',
               style: const TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
@@ -164,13 +166,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
             const SizedBox(height: 4),
-            Text(
-              isLoggedIn ? (user?.email ?? '') : 'Sign in to access your profile',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.white.withAlpha(204),
+            if (isLoggedIn && user != null)
+              Text(
+                user.email ?? '',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.white.withAlpha(217),
+                ),
               ),
-            ),
           ],
         ),
       ),
@@ -178,18 +181,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   String _getInitials(String name) {
-    final parts = name.trim().split(' ');
-    if (parts.length >= 2) {
-      return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
-    }
-    return name.isNotEmpty ? name[0].toUpperCase() : 'U';
+    final words = name.trim().split(' ');
+    if (words.isEmpty) return 'U';
+    if (words.length == 1) return words[0][0].toUpperCase();
+    return '${words[0][0]}${words[1][0]}'.toUpperCase();
   }
 
   Widget _buildStatisticsGrid(BuildContext context) {
+    final ordersProvider = context.watch<OrdersProvider>();
+    final itemsProvider = context.watch<ItemsProvider>();
+
+    // ✅ FIX: Changed from allOrders to buyerOrders
+    final totalOrders = ordersProvider.buyerOrders.length;
+    final totalListings = itemsProvider.myListings.length;
+    final activeListings = itemsProvider.myListings
+        .where((item) => item.status == 'available')
+        .length;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
@@ -204,38 +216,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            Consumer<OrdersProvider>(
-              builder: (context, ordersProvider, _) {
-                return _buildStatItem(
-                  icon: Icons.shopping_bag_outlined,
-                  value: ordersProvider.buyerOrders.length.toString(),
-                  label: 'Orders',
-                  color: AppTheme.primaryColor,
-                );
-              },
+            _buildStatItem(
+              icon: Icons.shopping_cart_outlined,
+              value: totalOrders.toString(),
+              label: 'Orders',
+              color: const Color(0xFF2196F3),
             ),
             _buildDivider(),
-            Consumer<ItemsProvider>(
-              builder: (context, itemsProvider, _) {
-                return _buildStatItem(
-                  icon: Icons.sell_outlined,
-                  value: itemsProvider.myListings.length.toString(),
-                  label: 'Listings',
-                  color: AppTheme.accentColor,
-                );
-              },
+            _buildStatItem(
+              icon: Icons.inventory_2_outlined,
+              value: activeListings.toString(),
+              label: 'Active',
+              color: const Color(0xFF4CAF50),
             ),
             _buildDivider(),
-            Consumer<OrdersProvider>(
-              builder: (context, ordersProvider, _) {
-                final donationsCount = ordersProvider.sellerOrders.length;
-                return _buildStatItem(
-                  icon: Icons.volunteer_activism_outlined,
-                  value: donationsCount.toString(),
-                  label: 'Sales',
-                  color: AppTheme.successColor,
-                );
-              },
+            _buildStatItem(
+              icon: Icons.sell_outlined,
+              value: totalListings.toString(),
+              label: 'Listings',
+              color: const Color(0xFFFF9800),
             ),
           ],
         ),
@@ -285,6 +284,60 @@ class _ProfileScreenState extends State<ProfileScreen> {
       height: 50,
       width: 1,
       color: const Color(0xFFE0E0E0),
+    );
+  }
+
+  // ✅ NEW: Role-based dashboard buttons
+  Widget _buildRoleDashboards(BuildContext context, dynamic user) {
+    final bool isVerifiedDriver = user.isDriver == true && user.driverVerified == true;
+    final bool isCharity = user.role == 'charity';
+
+    // Don't show anything if user is neither driver nor charity
+    if (!isVerifiedDriver && !isCharity) {
+      return const SizedBox.shrink();
+    }
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withAlpha(13),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            // Driver Dashboard Button
+            if (isVerifiedDriver) ...[
+              _buildMenuItem(
+                icon: Icons.local_shipping,
+                title: 'Driver Dashboard',
+                subtitle: 'Manage deliveries and earnings',
+                onTap: () => context.push('/driver/dashboard'),
+                color: const Color(0xFF2196F3),
+              ),
+              if (isCharity) _buildMenuDivider(),
+            ],
+            
+            // Charity Dashboard Button
+            if (isCharity) ...[
+              _buildMenuItem(
+                icon: Icons.volunteer_activism,
+                title: 'Charity Dashboard',
+                subtitle: 'Manage donations and impact',
+                onTap: () => context.push('/charity/home'),
+                color: const Color(0xFF4CAF50),
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 
@@ -354,6 +407,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     required String title,
     required String subtitle,
     required VoidCallback onTap,
+    Color? color,
   }) {
     return Material(
       color: Colors.transparent,
@@ -367,12 +421,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: AppTheme.primaryColor.withAlpha(26),
+                  color: (color ?? AppTheme.primaryColor).withAlpha(26),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
                   icon,
-                  color: AppTheme.primaryColor,
+                  color: color ?? AppTheme.primaryColor,
                   size: 22,
                 ),
               ),
@@ -400,10 +454,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ],
                 ),
               ),
-              const Icon(
-                Icons.chevron_right,
-                color: AppTheme.textSecondary,
-                size: 24,
+              Icon(
+                Icons.arrow_forward_ios,
+                size: 16,
+                color: Colors.grey[400],
               ),
             ],
           ),
@@ -413,9 +467,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildMenuDivider() {
-    return const Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16),
-      child: Divider(height: 1, color: Color(0xFFF0F0F0)),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Divider(
+        height: 1,
+        thickness: 1,
+        color: Colors.grey[200],
+      ),
     );
   }
 
@@ -424,9 +482,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: SizedBox(
         width: double.infinity,
-        child: OutlinedButton.icon(
+        height: 50,
+        child: OutlinedButton(
           onPressed: () async {
-            final confirm = await showDialog<bool>(
+            final confirmed = await showDialog<bool>(
               context: context,
               builder: (context) => AlertDialog(
                 title: const Text('Logout'),
@@ -436,10 +495,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     onPressed: () => Navigator.pop(context, false),
                     child: const Text('Cancel'),
                   ),
-                  ElevatedButton(
+                  TextButton(
                     onPressed: () => Navigator.pop(context, true),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.errorColor,
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.red,
                     ),
                     child: const Text('Logout'),
                   ),
@@ -447,33 +506,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             );
 
-            if (confirm == true && context.mounted) {
-              // Logout
+            if (confirmed == true) {
               await authProvider.logout();
-
-              // Wait a bit for state to propagate
-              await Future.delayed(const Duration(milliseconds: 300));
-
               if (context.mounted) {
-                // Navigate to login
                 context.go('/login');
               }
             }
           },
-          icon: const Icon(Icons.logout, color: AppTheme.errorColor),
-          label: const Text(
+          style: OutlinedButton.styleFrom(
+            side: BorderSide(color: Colors.red.shade300),
+            foregroundColor: Colors.red,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+          child: const Text(
             'Logout',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
-            ),
-          ),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: AppTheme.errorColor,
-            side: const BorderSide(color: AppTheme.errorColor, width: 1.5),
-            padding: const EdgeInsets.symmetric(vertical: 14),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
             ),
           ),
         ),
@@ -483,60 +534,66 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildLoginPrompt(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withAlpha(13),
-              blurRadius: 10,
-              offset: const Offset(0, 2),
+      padding: const EdgeInsets.all(32),
+      child: Column(
+        children: [
+          Icon(
+            Icons.person_outline,
+            size: 80,
+            color: Colors.grey[400],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Not Logged In',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey[700],
             ),
-          ],
-        ),
-        child: Column(
-          children: [
-            const Icon(
-              Icons.login,
-              size: 48,
-              color: AppTheme.primaryColor,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Please login to access your profile and orders',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey[600],
             ),
-            const SizedBox(height: 16),
-            const Text(
-              'Sign in to your account',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: AppTheme.textPrimary,
+          ),
+          const SizedBox(height: 24),
+          SizedBox(
+            width: double.infinity,
+            height: 50,
+            child: ElevatedButton(
+              onPressed: () => context.push('/login'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryColor,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text(
+                'Login',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
-            const SizedBox(height: 8),
-            const Text(
-              'Access your orders, favorites, and manage your listings',
-              textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 12),
+          TextButton(
+            onPressed: () => context.push('/register'),
+            child: const Text(
+              'Don\'t have an account? Register',
               style: TextStyle(
                 fontSize: 14,
-                color: AppTheme.textSecondary,
+                color: AppTheme.primaryColor,
               ),
             ),
-            const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () => context.push('/login'),
-                child: const Text('Sign In'),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextButton(
-              onPressed: () => context.push('/register'),
-              child: const Text("Don't have an account? Sign Up"),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

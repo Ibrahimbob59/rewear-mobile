@@ -5,7 +5,37 @@ class OrdersService {
 
   OrdersService(this.dio);
 
-  // Create new order - CORRECTED ENDPOINT
+  // ✅ ENHANCED: Better error handling for 422 validation errors
+  String _extractErrorMessage(dynamic error) {
+    if (error is DioException) {
+      if (error.response?.statusCode == 422) {
+        final data = error.response?.data;
+        
+        // Laravel validation errors format: { "errors": { "field": ["message"] } }
+        if (data != null && data['errors'] != null) {
+          final errors = data['errors'] as Map<String, dynamic>;
+          final allErrors = <String>[];
+          
+          errors.forEach((field, messages) {
+            if (messages is List) {
+              allErrors.addAll(messages.map((msg) => msg.toString()));
+            }
+          });
+          
+          return allErrors.join('\n');
+        }
+        
+        // Fallback to message
+        return data?['message'] ?? 'Validation failed';
+      }
+      
+      return error.response?.data?['message'] ?? error.message ?? 'Request failed';
+    }
+    
+    return error.toString();
+  }
+
+  // Create new order - CORRECT ENDPOINT
   Future<Map<String, dynamic>> createOrder({
     required int itemId,
     required int deliveryAddressId,
@@ -24,7 +54,8 @@ class OrdersService {
       
       return response.data['data'];
     } catch (e) {
-      throw Exception('Failed to create order: $e');
+      final errorMsg = _extractErrorMessage(e);
+      throw Exception('Failed to create order: $errorMsg');
     }
   }
 
@@ -135,6 +166,7 @@ class OrdersService {
       throw Exception('Failed to load order stats: $e');
     }
   }
+
   // Get buyer orders (orders I placed)
   Future<List<Map<String, dynamic>>> getBuyerOrders() async {
     try {

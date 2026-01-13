@@ -130,12 +130,11 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
                 Expanded(
                   child: _ActionCard(
                     icon: Icons.list_alt,
-                    label: 'My Deliveries',
+                    label: 'Available Deliveries',
                     count: 0,
                     onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Feature coming soon')),
-                      );
+                      // ✅ FIX: Navigate to available deliveries instead of "coming soon"
+                      context.push('/driver/available-deliveries');
                     },
                   ),
                 ),
@@ -145,9 +144,33 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
                     icon: Icons.account_balance_wallet,
                     label: 'Earnings',
                     onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Feature coming soon')),
-                      );
+                      // ✅ FIX: Navigate to earnings instead of "coming soon"
+                      context.push('/driver/earnings');
+                    },
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _ActionCard(
+                    icon: Icons.history,
+                    label: 'Delivery History',
+                    onTap: () {
+                      context.push('/driver/history');
+                    },
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _ActionCard(
+                    icon: Icons.local_shipping,
+                    label: 'My Deliveries',
+                    count: 0,
+                    onTap: () {
+                      context.push('/driver/history');
                     },
                   ),
                 ),

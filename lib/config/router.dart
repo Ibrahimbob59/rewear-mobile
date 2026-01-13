@@ -26,11 +26,16 @@ import '../screens/driver/driver_application_screen.dart';
 import '../screens/driver/driver_dashboard_screen.dart';
 import '../screens/driver/active_delivery_screen.dart';
 import '../screens/driver/delivery_history_screen.dart';
+import '../screens/driver/available_deliveries_screen.dart';
+import '../screens/driver/driver_earnings_screen.dart';
 import '../screens/delivery/order_tracking_screen.dart';
 import '../screens/charity/charity_home_screen.dart';
 import '../screens/charity/charity_donations_screen.dart';
 import '../screens/charity/charity_claimed_screen.dart';
 import '../screens/charity/charity_donate_screen.dart';
+import '../screens/charity/charity_dashboard_screen.dart';
+import '../screens/charity/pending_donations_screen.dart';
+import '../screens/charity/impact_stats_screen.dart';
 
 import '../services/storage_service.dart';
 import '../providers/auth_provider.dart';
@@ -199,7 +204,6 @@ class AppRouter {
       GoRoute(path: '/search', builder: (context, state) => const SearchScreen()),
       GoRoute(path: '/checkout', builder: (context, state) => const CheckoutScreen()),
 
-      // ✅ FIX 1: Order Detail Route (String -> int)
       GoRoute(
         path: '/orders/:id',
         builder: (context, state) {
@@ -210,10 +214,16 @@ class AppRouter {
 
       GoRoute(path: '/favorites', builder: (context, state) => const FavoritesScreen()),
 
+      // ========== DRIVER ROUTES ==========
       GoRoute(path: '/driver-application', builder: (context, state) => const DriverApplicationScreen()),
       GoRoute(path: '/driver/dashboard', builder: (context, state) => const DriverDashboardScreen()),
+      
+      // ✅ NEW: Available deliveries route
+      GoRoute(path: '/driver/available-deliveries', builder: (context, state) => const AvailableDeliveriesScreen()),
+      
+      // ✅ NEW: Driver earnings route
+      GoRoute(path: '/driver/earnings', builder: (context, state) => const DriverEarningsScreen()),
 
-      // ✅ FIX 2: Active Delivery Route (String -> int)
       GoRoute(
         path: '/driver/delivery/:deliveryId',
         builder: (context, state) {
@@ -232,10 +242,21 @@ class AppRouter {
         },
       ),
 
+      // ========== CHARITY ROUTES ==========
       GoRoute(path: '/charity/home', builder: (context, state) => const CharityHomeScreen()),
+      
+      // ✅ NEW: Charity dashboard route (different from home)
+      GoRoute(path: '/charity/dashboard', builder: (context, state) => const CharityDashboardScreen()),
+      
       GoRoute(path: '/charity/donations', builder: (context, state) => const CharityDonationsScreen()),
       GoRoute(path: '/charity/claimed', builder: (context, state) => const CharityClaimedScreen()),
       GoRoute(path: '/charity/donate', builder: (context, state) => const CharityDonateScreen()),
+      
+      // ✅ NEW: Pending donations route
+      GoRoute(path: '/charity/pending-donations', builder: (context, state) => const PendingDonationsScreen()),
+      
+      // ✅ NEW: Impact stats route
+      GoRoute(path: '/charity/impact-stats', builder: (context, state) => const ImpactStatsScreen()),
     ],
 
     errorBuilder: (context, state) => Scaffold(

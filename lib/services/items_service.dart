@@ -31,7 +31,8 @@ class ItemsService {
         if (size != null) 'size': size,
         if (condition != null) 'condition': condition,
         if (gender != null) 'gender': gender,
-        if (isDonation != null) 'is_donation': isDonation,
+        // ✅ FIX: Convert boolean to string 'true'/'false' for query params
+        if (isDonation != null) 'is_donation': isDonation ? 'true' : 'false',
         if (minPrice != null) 'min_price': minPrice,
         if (maxPrice != null) 'max_price': maxPrice,
         if (sortBy != null) 'sort_by': sortBy,
@@ -93,7 +94,8 @@ class ItemsService {
         'category': category,
         'size': size,
         'condition': condition,
-        'is_donation': isDonation,
+        // ✅ FIX: Convert boolean to string '1' or '0' for form data
+        'is_donation': isDonation ? '1' : '0',
         if (gender != null) 'gender': gender,
         if (brand != null) 'brand': brand,
         if (color != null) 'color': color,

@@ -139,11 +139,29 @@ class CharityHomeScreen extends StatelessWidget {
               onTap: () => context.push('/charity/claimed'),
             ),
             const SizedBox(height: 12),
+            // ✅ NEW: Pending Donations navigation
+            _ActionButton(
+              icon: Icons.pending_actions,
+              label: 'Pending Donations',
+              description: 'Track donations awaiting delivery',
+              color: Colors.orange,
+              onTap: () => context.push('/charity/pending-donations'),
+            ),
+            const SizedBox(height: 12),
+            // ✅ NEW: Impact Stats navigation
+            _ActionButton(
+              icon: Icons.bar_chart,
+              label: 'Impact Statistics',
+              description: 'View your charity\'s impact data',
+              color: Colors.purple,
+              onTap: () => context.push('/charity/impact-stats'),
+            ),
+            const SizedBox(height: 12),
             _ActionButton(
               icon: Icons.volunteer_activism,
               label: 'Donate Items',
               description: 'Create a donation listing',
-              color: Colors.orange,
+              color: Colors.teal,
               onTap: () => context.push('/charity/donate'),
             ),
           ],

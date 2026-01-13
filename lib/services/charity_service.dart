@@ -36,19 +36,25 @@ class CharityService {
     }
   }
 
-  // Get available donations
+  // ✅ FIX: Get available donations using correct endpoint
+  // Architecture doc (line 245-247): GET /items?is_donation=true&status=available
   Future<List<Item>> getAvailableDonations() async {
     try {
-      final response = await dio.get('/charity/available-donations');
+      // Use the items endpoint with donation filters
+      final response = await dio.get('/items', queryParameters: {
+        'is_donation': 'true',
+        'status': 'available',
+      });
 
       if (response.data['success'] != true) {
         throw Exception(response.data['message'] ?? 'Failed to load donations');
       }
 
       final data = response.data['data'];
-      final donationsList = data['donations'] as List;
-
-      return donationsList.map((json) => Item.fromJson(json)).toList();
+      
+      // Handle items wrapped in 'items' key
+      final itemsList = data['items'] as List;
+      return itemsList.map((json) => Item.fromJson(json)).toList();
     } catch (e) {
       throw Exception('Failed to load available donations: $e');
     }
@@ -143,6 +149,7 @@ class CharityService {
       throw Exception('Failed to load distribution history: $e');
     }
   }
+
   // Get charity dashboard data
   Future<Map<String, dynamic>> getDashboard() async {
     try {
