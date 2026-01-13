@@ -36,13 +36,14 @@ class CharityService {
     }
   }
 
-  // ✅ FIX: Get available donations using correct endpoint
-  // Architecture doc (line 245-247): GET /items?is_donation=true&status=available
+  // ✅ FIX: Get available donations using items endpoint
+  // Backend doesn't support is_donation filter, so we get all items and filter client-side
   Future<List<Item>> getAvailableDonations() async {
     try {
-      // Use the items endpoint with donation filters
+      print('🔍 Fetching available donations...');
+
+      // Get all available items (without is_donation filter since backend doesn't support it)
       final response = await dio.get('/items', queryParameters: {
-        'is_donation': 'true',
         'status': 'available',
       });
 
@@ -51,10 +52,20 @@ class CharityService {
       }
 
       final data = response.data['data'];
-      
+
       // Handle items wrapped in 'items' key
       final itemsList = data['items'] as List;
-      return itemsList.map((json) => Item.fromJson(json)).toList();
+
+      // Filter client-side for donation items
+      final donationItems = itemsList
+          .map((json) => Item.fromJson(json))
+          .where((item) => item.isDonation == true)
+          .toList();
+
+      print('   ✓ Got ${itemsList.length} total items');
+      print('   ✓ Filtered to ${donationItems.length} donation items (client-side)');
+
+      return donationItems;
     } catch (e) {
       throw Exception('Failed to load available donations: $e');
     }

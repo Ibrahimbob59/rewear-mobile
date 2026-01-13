@@ -19,6 +19,24 @@ class _AvailableDeliveriesScreenState extends State<AvailableDeliveriesScreen> {
     });
   }
 
+  // ✅ Helper method to safely parse int
+  int _parseInt(dynamic value) {
+    if (value == null) return 0;
+    if (value is int) return value;
+    if (value is String) return int.tryParse(value) ?? 0;
+    if (value is double) return value.toInt();
+    return 0;
+  }
+
+  // ✅ Helper method to safely parse double
+  double _parseDouble(dynamic value) {
+    if (value == null) return 0.0;
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is String) return double.tryParse(value) ?? 0.0;
+    return 0.0;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -98,7 +116,6 @@ class _AvailableDeliveriesScreenState extends State<AvailableDeliveriesScreen> {
               itemCount: deliveries.length,
               itemBuilder: (context, index) {
                 final delivery = deliveries[index];
-                // FIXED: Changed from Delivery type to Map<String, dynamic>
                 return _buildDeliveryCard(delivery);
               },
             ),
@@ -108,21 +125,20 @@ class _AvailableDeliveriesScreenState extends State<AvailableDeliveriesScreen> {
     );
   }
 
-  // FIXED: Changed parameter type from Delivery to Map<String, dynamic>
   Widget _buildDeliveryCard(Map<String, dynamic> delivery) {
-    // FIXED: Using bracket notation for all property access
-    final deliveryId = delivery['id'] ?? 0;
-    final deliveryFee = (delivery['delivery_fee'] ?? 0).toDouble();
-    final driverEarning = (delivery['driver_earning'] ?? 0).toDouble();
-    final distanceKm = (delivery['distance_km'] ?? 0).toDouble();
-    final pickupAddress = delivery['pickup_address'] ?? 'Unknown';
-    final deliveryAddress = delivery['delivery_address'] ?? 'Unknown';
+    // ✅ Use safe parsing for all numeric fields
+    final deliveryId = _parseInt(delivery['id']);
+    final deliveryFee = _parseDouble(delivery['delivery_fee']);
+    final driverEarning = _parseDouble(delivery['driver_earning']);
+    final distanceKm = _parseDouble(delivery['distance_km']);
+    final pickupAddress = delivery['pickup_address']?.toString() ?? 'Unknown';
+    final deliveryAddress = delivery['delivery_address']?.toString() ?? 'Unknown';
     
     // Get order info
     final order = delivery['order'] as Map<String, dynamic>?;
-    final orderNumber = order?['order_number'] ?? 'N/A';
+    final orderNumber = order?['order_number']?.toString() ?? 'N/A';
     final item = order?['item'] as Map<String, dynamic>?;
-    final itemTitle = item?['title'] ?? 'Unknown Item';
+    final itemTitle = item?['title']?.toString() ?? 'Unknown Item';
 
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
@@ -200,55 +216,103 @@ class _AvailableDeliveriesScreenState extends State<AvailableDeliveriesScreen> {
                   Expanded(
                     child: Text(
                       itemTitle,
-                      style: const TextStyle(fontWeight: FontWeight.w500),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
 
-              // Addresses
-              _buildAddressRow(
-                Icons.location_on_outlined,
-                'Pickup',
-                pickupAddress,
+              // Pickup Location
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    Icons.location_on,
+                    color: Colors.blue[600],
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Pickup',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey,
+                          ),
+                        ),
+                        Text(
+                          pickupAddress,
+                          style: const TextStyle(fontSize: 14),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+
+              // Delivery Location
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    Icons.location_on,
+                    color: Colors.green[600],
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Delivery',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey,
+                          ),
+                        ),
+                        Text(
+                          deliveryAddress,
+                          style: const TextStyle(fontSize: 14),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 12),
-              _buildAddressRow(
-                Icons.location_on,
-                'Delivery',
-                deliveryAddress,
-              ),
-              const Divider(height: 24),
 
-              // Details Row
+              // Distance and Fee
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  _buildDetailItem(
+                  Icon(
                     Icons.route,
+                    color: Colors.grey[600],
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
                     '${distanceKm.toStringAsFixed(1)} km',
-                    'Distance',
+                    style: const TextStyle(fontSize: 14),
                   ),
-                  Container(
-                    width: 1,
-                    height: 40,
-                    color: Colors.grey[300],
-                  ),
-                  _buildDetailItem(
+                  const SizedBox(width: 16),
+                  Icon(
                     Icons.attach_money,
-                    '\$${deliveryFee.toStringAsFixed(2)}',
-                    'Total Fee',
+                    color: Colors.grey[600],
+                    size: 20,
                   ),
-                  Container(
-                    width: 1,
-                    height: 40,
-                    color: Colors.grey[300],
-                  ),
-                  _buildDetailItem(
-                    Icons.account_balance_wallet,
-                    '\$${driverEarning.toStringAsFixed(2)}',
-                    'You Earn',
+                  const SizedBox(width: 4),
+                  Text(
+                    'Total: \$${deliveryFee.toStringAsFixed(2)}',
+                    style: const TextStyle(fontSize: 14),
                   ),
                 ],
               ),
@@ -257,13 +321,23 @@ class _AvailableDeliveriesScreenState extends State<AvailableDeliveriesScreen> {
               // Accept Button
               SizedBox(
                 width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () => _showAcceptDialog(delivery),
-                  icon: const Icon(Icons.check_circle),
-                  label: const Text('Accept Delivery'),
+                child: ElevatedButton(
+                  onPressed: () {
+                    _showAcceptDialog(delivery);
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green,
                     padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: const Text(
+                    'Accept Delivery',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ),
@@ -274,107 +348,68 @@ class _AvailableDeliveriesScreenState extends State<AvailableDeliveriesScreen> {
     );
   }
 
-  Widget _buildAddressRow(IconData icon, String label, String address) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, size: 20, color: Colors.grey[700]),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[600],
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                address,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
+  void _showAcceptDialog(Map<String, dynamic> delivery) {
+    final deliveryId = _parseInt(delivery['id']);
+    final driverEarning = _parseDouble(delivery['driver_earning']);
 
-  Widget _buildDetailItem(IconData icon, String value, String label) {
-    return Column(
-      children: [
-        Icon(icon, size: 24, color: Colors.grey[700]),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 11,
-            color: Colors.grey[600],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Future<void> _showAcceptDialog(Map<String, dynamic> delivery) async {
-    final confirmed = await showDialog<bool>(
+    showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Accept Delivery'),
         content: Text(
-          'Do you want to accept delivery #${delivery['id']}?\n\n'
-          'You will earn \$${((delivery['driver_earning'] ?? 0).toDouble()).toStringAsFixed(2)} for this delivery.',
+          'Do you want to accept this delivery?\n\nYou will earn: \$${driverEarning.toStringAsFixed(2)}',
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => Navigator.pop(context),
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+            onPressed: () async {
+              Navigator.pop(context);
+              await _acceptDelivery(deliveryId);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+            ),
             child: const Text('Accept'),
           ),
         ],
       ),
     );
+  }
 
-    if (confirmed == true && mounted) {
-      final provider = context.read<DeliveryProvider>();
-      final success = await provider.acceptDelivery(delivery['id']);
+  Future<void> _acceptDelivery(int deliveryId) async {
+    try {
+      final success = await context.read<DeliveryProvider>().acceptDelivery(deliveryId);
 
-      if (success && mounted) {
+      if (!mounted) return;
+
+      if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Delivery accepted successfully!'),
             backgroundColor: Colors.green,
           ),
         );
-        
-        // Navigate to active delivery screen
-        context.push('/driver/deliveries/${delivery['id']}');
-      } else if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(provider.error ?? 'Failed to accept delivery'),
-            backgroundColor: Colors.red,
-          ),
-        );
+
+        // Only navigate if accept was successful
+        context.push('/driver/delivery/$deliveryId');
       }
+    } catch (e) {
+      if (!mounted) return;
+
+      // Show error message with full details
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to accept delivery: $e'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 4),
+        ),
+      );
+
+      // Refresh the list to remove the taken order from the UI
+      await context.read<DeliveryProvider>().loadAvailableDeliveries();
     }
   }
 }

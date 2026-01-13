@@ -31,14 +31,18 @@ class ItemsService {
         if (size != null) 'size': size,
         if (condition != null) 'condition': condition,
         if (gender != null) 'gender': gender,
-        // ✅ FIX: Convert boolean to string 'true'/'false' for query params
-        if (isDonation != null) 'is_donation': isDonation ? 'true' : 'false',
+        // ⚠️ REMOVED: Backend doesn't support is_donation parameter
+        // Will filter client-side instead
         if (minPrice != null) 'min_price': minPrice,
         if (maxPrice != null) 'max_price': maxPrice,
         if (sortBy != null) 'sort_by': sortBy,
       };
 
       print('🔍 Fetching items: $queryParams');
+      if (isDonation == true) {
+        print('   ⚠️ isDonation filter requested but backend doesn\'t support it');
+        print('   ℹ️ Will filter client-side after fetching');
+      }
 
       final response = await _dio.get('/items', queryParameters: queryParams);
 
@@ -47,9 +51,15 @@ class ItemsService {
 
       // Backend returns: { "success": true, "message": "...", "data": { "items": [...] }, "meta": {...} }
       final data = response.data['data'];
-      final items = (data['items'] as List)
+      List<Item> items = (data['items'] as List)
           .map((json) => Item.fromJson(json))
           .toList();
+
+      // Client-side filter for donations (since backend doesn't support it)
+      if (isDonation == true) {
+        items = items.where((item) => item.isDonation == true).toList();
+        print('   ✓ Filtered to ${items.length} donation items (client-side)');
+      }
 
       return {
         'items': items,
@@ -86,6 +96,7 @@ class ItemsService {
     String? brand,
     String? color,
     double? price,
+    int? donationQuantity,
   }) async {
     try {
       final formData = FormData.fromMap({
@@ -94,25 +105,33 @@ class ItemsService {
         'category': category,
         'size': size,
         'condition': condition,
-        // ✅ FIX: Convert boolean to string '1' or '0' for form data
         'is_donation': isDonation ? '1' : '0',
         if (gender != null) 'gender': gender,
         if (brand != null) 'brand': brand,
         if (color != null) 'color': color,
         if (price != null) 'price': price,
+        if (isDonation && donationQuantity != null) 'donation_quantity': donationQuantity,
       });
 
-      for (var image in images) {
+      // Add images as array - use the same key 'images[]' for each file
+      for (var i = 0; i < images.length; i++) {
         formData.files.add(MapEntry(
           'images[]',
-          await MultipartFile.fromFile(image.path),
+          await MultipartFile.fromFile(images[i].path),
         ));
       }
+
+      print('📤 Creating item with is_donation=${isDonation ? '1' : '0'} (sent as string), donation_quantity=$donationQuantity, price=$price');
+      print('📤 Images count: ${images.length}');
 
       final response = await _dio.post('/items', data: formData);
       return Item.fromJson(response.data['data']);
     } catch (e) {
       print('❌ Error creating item: $e');
+      if (e is DioException) {
+        print('❌ Response data: ${e.response?.data}');
+        print('❌ Status code: ${e.response?.statusCode}');
+      }
       rethrow;
     }
   }

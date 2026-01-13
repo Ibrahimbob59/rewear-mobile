@@ -17,17 +17,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    _loadData();
+    // Defer data loading until after build phase to avoid setState during build error
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadData();
+    });
   }
 
   Future<void> _loadData() async {
     final authProvider = context.read<AuthProvider>();
     if (authProvider.isLoggedIn) {
       await authProvider.initialize();
-      
+
+      if (!mounted) return;
+
       final ordersProvider = context.read<OrdersProvider>();
-      ordersProvider.loadAllOrders();  
-      
+      ordersProvider.loadAllOrders();
+
       final itemsProvider = context.read<ItemsProvider>();
       itemsProvider.loadMyListings();
     }
@@ -290,12 +295,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
   // ✅ NEW: Role-based dashboard buttons
   Widget _buildRoleDashboards(BuildContext context, dynamic user) {
     final bool isVerifiedDriver = user.isDriver == true && user.driverVerified == true;
-    final bool isCharity = user.role == 'charity';
+    // Backend sends isCharity as boolean field
+    final bool isCharity = user.isCharity == true;
+
+    print('🔍 _buildRoleDashboards: isVerifiedDriver=$isVerifiedDriver, isCharity=$isCharity');
+    print('   user.isDriver=${user.isDriver}, user.isCharity=${user.isCharity}');
 
     // Don't show anything if user is neither driver nor charity
     if (!isVerifiedDriver && !isCharity) {
+      print('   ❌ No dashboard access - hiding buttons');
       return const SizedBox.shrink();
     }
+
+    print('   ✅ Showing dashboard buttons');
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),

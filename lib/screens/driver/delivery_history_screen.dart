@@ -18,11 +18,37 @@ class _DeliveryHistoryScreenState extends State<DeliveryHistoryScreen> {
     });
   }
 
+  // ✅ Helper method to safely parse int
+  int _parseInt(dynamic value) {
+    if (value == null) return 0;
+    if (value is int) return value;
+    if (value is String) return int.tryParse(value) ?? 0;
+    if (value is double) return value.toInt();
+    return 0;
+  }
+
+  // ✅ Helper method to safely parse double
+  double _parseDouble(dynamic value) {
+    if (value == null) return 0.0;
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is String) return double.tryParse(value) ?? 0.0;
+    return 0.0;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Delivery History'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () {
+              context.read<DeliveryProvider>().loadDeliveryHistory();
+            },
+          ),
+        ],
       ),
       body: Consumer<DeliveryProvider>(
         builder: (context, deliveryProvider, child) {
@@ -72,7 +98,7 @@ class _DeliveryHistoryScreenState extends State<DeliveryHistoryScreen> {
                   ),
                   const SizedBox(height: 8),
                   const Text(
-                    'Your completed deliveries will appear here',
+                    'Completed deliveries will appear here',
                     style: TextStyle(color: Colors.grey),
                   ),
                 ],
@@ -109,21 +135,22 @@ class _DeliveryHistoryScreenState extends State<DeliveryHistoryScreen> {
   }
 
   Widget _buildDeliveryCard(Map<String, dynamic> delivery) {
-    final deliveryId = delivery['id'] ?? 0;
-    final status = delivery['status'] ?? 'unknown';
-    final deliveryFee = (delivery['delivery_fee'] ?? 0).toDouble();
-    final driverEarning = (delivery['driver_earning'] ?? 0).toDouble();
-    final distanceKm = (delivery['distance_km'] ?? 0).toDouble();
-    final createdAt = delivery['created_at'] ?? '';
-    final completedAt = delivery['completed_at'] ?? delivery['delivered_at'] ?? '';
+    // ✅ Use safe parsing for all numeric fields
+    final deliveryId = _parseInt(delivery['id']);
+    final status = delivery['status']?.toString() ?? 'unknown';
+    final deliveryFee = _parseDouble(delivery['delivery_fee']);
+    final driverEarning = _parseDouble(delivery['driver_earning']);
+    final distanceKm = _parseDouble(delivery['distance_km']);
+    final createdAt = delivery['created_at']?.toString() ?? '';
+    final completedAt = delivery['completed_at']?.toString() ?? delivery['delivered_at']?.toString() ?? '';
     
     // Get order info
     final order = delivery['order'] as Map<String, dynamic>?;
-    final orderNumber = order?['order_number'] ?? 'N/A';
+    final orderNumber = order?['order_number']?.toString() ?? 'N/A';
     
     // Get addresses
-    final pickupAddress = delivery['pickup_address'] ?? 'Unknown';
-    final deliveryAddress = delivery['delivery_address'] ?? 'Unknown';
+    final pickupAddress = delivery['pickup_address']?.toString() ?? 'Unknown';
+    final deliveryAddress = delivery['delivery_address']?.toString() ?? 'Unknown';
 
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
@@ -150,7 +177,7 @@ class _DeliveryHistoryScreenState extends State<DeliveryHistoryScreen> {
                 _buildStatusBadge(status),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 4),
             Text(
               'Order: $orderNumber',
               style: TextStyle(
@@ -160,95 +187,119 @@ class _DeliveryHistoryScreenState extends State<DeliveryHistoryScreen> {
             ),
             const Divider(height: 24),
 
-            // Addresses
-            _buildAddressRow(
-              Icons.location_on_outlined,
-              'Pickup',
-              pickupAddress,
-            ),
-            const SizedBox(height: 12),
-            _buildAddressRow(
-              Icons.location_on,
-              'Delivery',
-              deliveryAddress,
-            ),
-            const Divider(height: 24),
-
-            // Delivery Info
+            // Locations
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Icon(
+                  Icons.location_on,
+                  color: Colors.blue[600],
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
                 Expanded(
-                  child: _buildInfoTile(
-                    'Distance',
-                    '${distanceKm.toStringAsFixed(1)} km',
-                    Icons.route,
-                  ),
-                ),
-                Expanded(
-                  child: _buildInfoTile(
-                    'Fee',
-                    '\$${deliveryFee.toStringAsFixed(2)}',
-                    Icons.attach_money,
-                  ),
-                ),
-                Expanded(
-                  child: _buildInfoTile(
-                    'Earned',
-                    '\$${driverEarning.toStringAsFixed(2)}',
-                    Icons.account_balance_wallet,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            // Dates
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Accepted',
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 12,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      _formatDate(createdAt),
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-                if (completedAt.isNotEmpty)
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Completed',
+                      const Text(
+                        'Pickup',
                         style: TextStyle(
-                          color: Colors.grey[600],
                           fontSize: 12,
+                          color: Colors.grey,
                         ),
                       ),
-                      const SizedBox(height: 2),
                       Text(
-                        _formatDate(completedAt),
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
+                        pickupAddress,
+                        style: const TextStyle(fontSize: 14),
                       ),
                     ],
                   ),
+                ),
               ],
             ),
+            const SizedBox(height: 8),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  Icons.location_on,
+                  color: Colors.green[600],
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Delivery',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey,
+                        ),
+                      ),
+                      Text(
+                        deliveryAddress,
+                        style: const TextStyle(fontSize: 14),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            // Stats Row
+            Row(
+              children: [
+                Icon(
+                  Icons.route,
+                  color: Colors.grey[600],
+                  size: 20,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  '${distanceKm.toStringAsFixed(1)} km',
+                  style: const TextStyle(fontSize: 14),
+                ),
+                const SizedBox(width: 16),
+                Icon(
+                  Icons.attach_money,
+                  color: Colors.green[600],
+                  size: 20,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  '\$${driverEarning.toStringAsFixed(2)}',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.green,
+                  ),
+                ),
+              ],
+            ),
+            
+            if (completedAt.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Icon(
+                    Icons.check_circle,
+                    color: Colors.grey[600],
+                    size: 20,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Completed: ${_formatDate(completedAt)}',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ],
         ),
       ),
@@ -256,107 +307,55 @@ class _DeliveryHistoryScreenState extends State<DeliveryHistoryScreen> {
   }
 
   Widget _buildStatusBadge(String status) {
-    Color backgroundColor;
-    Color textColor;
-    String displayText;
-
+    Color color;
+    String text;
+    
     switch (status.toLowerCase()) {
       case 'delivered':
-      case 'completed':
-        backgroundColor = Colors.green[100]!;
-        textColor = Colors.green[900]!;
-        displayText = 'Completed';
+        color = Colors.green;
+        text = 'Delivered';
+        break;
+      case 'in_transit':
+        color = Colors.blue;
+        text = 'In Transit';
+        break;
+      case 'assigned':
+        color = Colors.orange;
+        text = 'Assigned';
         break;
       case 'cancelled':
-        backgroundColor = Colors.red[100]!;
-        textColor = Colors.red[900]!;
-        displayText = 'Cancelled';
+        color = Colors.red;
+        text = 'Cancelled';
         break;
       default:
-        backgroundColor = Colors.grey[200]!;
-        textColor = Colors.grey[800]!;
-        displayText = status;
+        color = Colors.grey;
+        text = status;
     }
-
+    
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: backgroundColor,
+        color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.3)),
       ),
       child: Text(
-        displayText,
+        text,
         style: TextStyle(
-          color: textColor,
+          color: color,
           fontSize: 12,
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.bold,
         ),
       ),
     );
   }
 
-  Widget _buildAddressRow(IconData icon, String label, String address) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, size: 20, color: Colors.grey[700]),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 12,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                address,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildInfoTile(String label, String value, IconData icon) {
-    return Column(
-      children: [
-        Icon(icon, size: 24, color: Colors.grey[700]),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          label,
-          style: TextStyle(
-            color: Colors.grey[600],
-            fontSize: 12,
-          ),
-        ),
-      ],
-    );
-  }
-
-  String _formatDate(String dateStr) {
+  String _formatDate(String dateString) {
     try {
-      final date = DateTime.parse(dateStr);
+      final date = DateTime.parse(dateString);
       return '${date.day}/${date.month}/${date.year}';
     } catch (e) {
-      return dateStr;
+      return dateString;
     }
   }
 }

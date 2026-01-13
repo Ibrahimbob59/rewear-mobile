@@ -47,15 +47,18 @@ class DeliveryProvider extends ChangeNotifier {
   // Load active deliveries for current driver
   Future<void> loadActiveDeliveries() async {
     try {
+      print('📋 Provider: Loading active deliveries...');
       isLoading = true;
       error = null;
       notifyListeners();
 
       activeDeliveries = await _deliveryService.getActiveDeliveries();
+      print('📋 Provider: Loaded ${activeDeliveries.length} active deliveries');
 
       isLoading = false;
       notifyListeners();
     } catch (e) {
+      print('❌ Provider error loading active deliveries: $e');
       error = e.toString();
       isLoading = false;
       notifyListeners();
@@ -128,8 +131,9 @@ class DeliveryProvider extends ChangeNotifier {
 
       await _deliveryService.acceptDelivery(deliveryId);
 
-      // Reload active deliveries and current delivery
+      // Reload active deliveries, available deliveries, and current delivery
       await loadActiveDeliveries();
+      await loadAvailableDeliveries();  // Refresh available list to remove taken order
       await loadDelivery(deliveryId);
 
       isLoading = false;
@@ -208,11 +212,14 @@ class DeliveryProvider extends ChangeNotifier {
     required String reason,
   }) async {
     try {
+      print('🔄 Provider: Cancelling delivery #$deliveryId...');
       isLoading = true;
       error = null;
       notifyListeners();
 
       await _deliveryService.cancelDelivery(deliveryId, reason);
+
+      print('✅ Provider: Cancel successful, clearing delivery and reloading...');
 
       // Clear current delivery
       currentDelivery = null;
@@ -224,8 +231,10 @@ class DeliveryProvider extends ChangeNotifier {
 
       isLoading = false;
       notifyListeners();
+      print('✅ Provider: Lists reloaded after cancel');
       return true;
     } catch (e) {
+      print('❌ Provider: Cancel failed - $e');
       error = e.toString();
       isLoading = false;
       notifyListeners();

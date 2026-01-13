@@ -26,6 +26,7 @@ class _CreateItemScreenState extends State<CreateItemScreen> {
   final _priceController = TextEditingController();
   final _brandController = TextEditingController();
   final _colorController = TextEditingController();
+  final _donationQuantityController = TextEditingController();
 
   // Form values
   final List<File> _images = [];
@@ -43,6 +44,7 @@ class _CreateItemScreenState extends State<CreateItemScreen> {
     _priceController.dispose();
     _brandController.dispose();
     _colorController.dispose();
+    _donationQuantityController.dispose();
     super.dispose();
   }
 
@@ -142,6 +144,26 @@ class _CreateItemScreenState extends State<CreateItemScreen> {
       return;
     }
 
+    // Validate donation quantity for donations
+    if (_isDonation && _donationQuantityController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter the quantity of items in this donation'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    // Parse donation quantity
+    final parsedDonationQuantity = _isDonation
+        ? int.tryParse(_donationQuantityController.text.trim())
+        : null;
+
+    print('🔍 Donation toggle: $_isDonation');
+    print('🔍 Donation quantity text: "${_donationQuantityController.text.trim()}"');
+    print('🔍 Parsed donation quantity: $parsedDonationQuantity');
+
     setState(() {
       _isLoading = true;
     });
@@ -164,6 +186,7 @@ class _CreateItemScreenState extends State<CreateItemScreen> {
           : double.tryParse(_priceController.text.trim()),
       isDonation: _isDonation,
       images: _images,
+      donationQuantity: parsedDonationQuantity,
     );
 
     setState(() {
@@ -179,7 +202,7 @@ class _CreateItemScreenState extends State<CreateItemScreen> {
           backgroundColor: Colors.green,
         ),
       );
-      context.go('/my-listings');
+      context.go('/selling');
     } else {
       final error = context.read<ItemsProvider>().error;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -424,11 +447,40 @@ class _CreateItemScreenState extends State<CreateItemScreen> {
                     _isDonation = value;
                     if (value) {
                       _priceController.clear();
+                    } else {
+                      _donationQuantityController.clear();
                     }
                   });
                 },
               ),
             ),
+
+            const SizedBox(height: 16),
+
+            // Donation Quantity (if donation)
+            if (_isDonation)
+              TextFormField(
+                controller: _donationQuantityController,
+                decoration: const InputDecoration(
+                  labelText: 'Donation Quantity*',
+                  hintText: 'Number of items in this batch',
+                  filled: true,
+                  fillColor: Colors.white,
+                ),
+                keyboardType: TextInputType.number,
+                validator: (value) {
+                  if (_isDonation) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Please enter quantity';
+                    }
+                    final quantity = int.tryParse(value);
+                    if (quantity == null || quantity <= 0) {
+                      return 'Please enter a valid quantity';
+                    }
+                  }
+                  return null;
+                },
+              ),
 
             const SizedBox(height: 16),
 

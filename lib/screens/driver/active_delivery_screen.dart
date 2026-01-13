@@ -24,7 +24,22 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
       context.read<DeliveryProvider>().loadDelivery(widget.deliveryId);
     });
   }
+    // ✅ Added at lines 21-35
+  int _parseInt(dynamic value) {
+    if (value == null) return 0;
+    if (value is int) return value;
+    if (value is String) return int.tryParse(value) ?? 0;
+    if (value is double) return value.toInt();
+    return 0;
+  }
 
+  double _parseDouble(dynamic value) {
+    if (value == null) return 0.0;
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is String) return double.tryParse(value) ?? 0.0;
+    return 0.0;
+}
   Future<void> _handleConfirmPickup() async {
     final provider = context.read<DeliveryProvider>();
 
@@ -173,11 +188,10 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
 
   Widget _buildDeliveryDetails(Map<String, dynamic> delivery) {
     final status = delivery['status'] ?? 'unknown';
-    final deliveryFee = (delivery['delivery_fee'] ?? 0).toDouble();
-    final driverEarning = (delivery['driver_earning'] ?? 0).toDouble();
-    final distanceKm = (delivery['distance_km'] ?? 0).toDouble();
-    
-    // Get order info
+    final deliveryFee = _parseDouble(delivery['delivery_fee']);
+    final driverEarning = _parseDouble(delivery['driver_earning']);
+    final distanceKm = _parseDouble(delivery['distance_km']);
+        // Get order info
     final order = delivery['order'] as Map<String, dynamic>?;
     final orderNumber = order?['order_number'] ?? 'N/A';
     final item = order?['item'] as Map<String, dynamic>?;

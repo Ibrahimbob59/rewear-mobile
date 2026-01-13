@@ -209,6 +209,7 @@ class ItemsProvider with ChangeNotifier {
     String? brand,
     String? color,
     double? price,
+    int? donationQuantity,
   }) async {
     _isLoading = true;
     _error = null;
@@ -227,6 +228,7 @@ class ItemsProvider with ChangeNotifier {
         brand: brand,
         color: color,
         price: price,
+        donationQuantity: donationQuantity,
       );
 
       _myListings.insert(0, item);
