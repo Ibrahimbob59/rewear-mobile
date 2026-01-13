@@ -36,6 +36,8 @@ import '../screens/charity/charity_donate_screen.dart';
 import '../screens/charity/charity_dashboard_screen.dart';
 import '../screens/charity/pending_donations_screen.dart';
 import '../screens/charity/impact_stats_screen.dart';
+import '../screens/admin/admin_driver_applications_screen.dart';
+import '../screens/admin/admin_driver_application_detail_screen.dart';
 
 import '../services/storage_service.dart';
 import '../providers/auth_provider.dart';
@@ -257,6 +259,20 @@ class AppRouter {
       
       // ✅ NEW: Impact stats route
       GoRoute(path: '/charity/impact-stats', builder: (context, state) => const ImpactStatsScreen()),
+
+      // ========== ADMIN ROUTES ==========
+      GoRoute(
+        path: '/admin/driver-applications',
+        builder: (context, state) => const AdminDriverApplicationsScreen(),
+      ),
+      GoRoute(
+        path: '/admin/driver-applications/:id',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          final extra = state.extra as Map<String, dynamic>?;
+          return AdminDriverApplicationDetailScreen(applicationId: id, application: extra);
+        },
+      ),
     ],
 
     errorBuilder: (context, state) => Scaffold(

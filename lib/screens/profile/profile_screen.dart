@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/orders_provider.dart';
 import '../../providers/items_provider.dart';
+import '../../providers/driver_provider.dart';
 import '../../config/theme.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -14,6 +15,9 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+  Map<String, dynamic>? _driverEligibility;
+  Map<String, dynamic>? _driverApplication;
+
   @override
   void initState() {
     super.initState();
@@ -35,6 +39,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
       final itemsProvider = context.read<ItemsProvider>();
       itemsProvider.loadMyListings();
+
+      // Load driver application data
+      final driverProvider = context.read<DriverProvider>();
+      await driverProvider.loadMyApplication();
+      if (mounted) {
+        setState(() {
+          _driverApplication = driverProvider.applicationData;
+        });
+      }
     }
   }
 
@@ -297,12 +310,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final bool isVerifiedDriver = user.isDriver == true && user.driverVerified == true;
     // Backend sends isCharity as boolean field
     final bool isCharity = user.isCharity == true;
+    // Check if user is admin
+    final bool isAdmin = user.isAdmin == true;
 
-    print('🔍 _buildRoleDashboards: isVerifiedDriver=$isVerifiedDriver, isCharity=$isCharity');
-    print('   user.isDriver=${user.isDriver}, user.isCharity=${user.isCharity}');
+    print('🔍 _buildRoleDashboards: isVerifiedDriver=$isVerifiedDriver, isCharity=$isCharity, isAdmin=$isAdmin');
+    print('   user.isDriver=${user.isDriver}, user.isCharity=${user.isCharity}, user.isAdmin=${user.isAdmin}');
 
-    // Don't show anything if user is neither driver nor charity
-    if (!isVerifiedDriver && !isCharity) {
+    // Don't show anything if user is neither driver nor charity nor admin
+    if (!isVerifiedDriver && !isCharity && !isAdmin) {
       print('   ❌ No dashboard access - hiding buttons');
       return const SizedBox.shrink();
     }
@@ -325,6 +340,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         child: Column(
           children: [
+            // Admin Dashboard Button
+            if (isAdmin) ...[
+              _buildMenuItem(
+                icon: Icons.admin_panel_settings,
+                title: 'Admin Dashboard',
+                subtitle: 'Manage driver applications',
+                onTap: () => context.push('/admin/driver-applications'),
+                color: const Color(0xFF9C27B0),
+              ),
+              if (isVerifiedDriver || isCharity) _buildMenuDivider(),
+            ],
             // Driver Dashboard Button
             if (isVerifiedDriver) ...[
               _buildMenuItem(
@@ -336,7 +362,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               if (isCharity) _buildMenuDivider(),
             ],
-            
+
             // Charity Dashboard Button
             if (isCharity) ...[
               _buildMenuItem(
@@ -354,6 +380,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildSettingsMenu(BuildContext context) {
+    final user = context.watch<AuthProvider>().user;
+    // Check if user is a regular user (not verified driver, not charity, not admin)
+    final bool isRegularUser = user != null &&
+        !user.isVerifiedDriver &&
+        !user.isCharity &&
+        !user.isAdmin;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Container(
@@ -370,6 +403,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         child: Column(
           children: [
+            // Apply as Driver - only for regular users
+            if (isRegularUser) ...[
+              _buildDriverApplicationMenuItem(context, user),
+              _buildMenuDivider(),
+            ],
             _buildMenuItem(
               icon: Icons.shopping_bag_outlined,
               title: 'My Listings',
@@ -607,6 +645,72 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildDriverApplicationMenuItem(BuildContext context, dynamic user) {
+    // Check if user has a pending application
+    final hasPendingApplication = _driverApplication != null;
+    final applicationStatus = _driverApplication?['status'];
+
+    String title = 'Apply as Driver';
+    String subtitle = 'Become a delivery driver and earn';
+    IconData icon = Icons.local_shipping_outlined;
+    Color color = const Color(0xFF2196F3);
+
+    if (hasPendingApplication) {
+      title = 'Driver Application';
+      icon = Icons.pending_outlined;
+      color = const Color(0xFFFF9800);
+
+      if (applicationStatus == 'pending') {
+        subtitle = 'Application under review';
+      } else if (applicationStatus == 'approved') {
+        subtitle = 'Application approved!';
+        icon = Icons.check_circle_outline;
+        color = const Color(0xFF4CAF50);
+      } else if (applicationStatus == 'rejected') {
+        subtitle = 'Application was rejected';
+        icon = Icons.cancel_outlined;
+        color = const Color(0xFFF44336);
+      }
+    }
+
+    return _buildMenuItem(
+      icon: icon,
+      title: title,
+      subtitle: subtitle,
+      onTap: () async {
+        if (hasPendingApplication) {
+          // Show application status
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Application status: $applicationStatus'),
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        } else {
+          // Check eligibility before navigating
+          final driverProvider = context.read<DriverProvider>();
+          final eligibility = await driverProvider.checkEligibility();
+
+          if (eligibility != null && eligibility['can_apply'] == true) {
+            if (context.mounted) {
+              context.push('/driver-application');
+            }
+          } else {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(eligibility?['reason'] ?? 'You cannot apply at this time'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+          }
+        }
+      },
+      color: color,
     );
   }
 }

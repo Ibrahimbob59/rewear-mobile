@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import 'dart:io';
 import '../../widgets/common/custom_button.dart';
+import '../../providers/auth_provider.dart';
+import '../../services/driver_service.dart';
+import '../../services/api_service.dart';
 
 class DriverApplicationScreen extends StatefulWidget {
   const DriverApplicationScreen({super.key});
@@ -78,7 +82,7 @@ class _DriverApplicationScreenState extends State<DriverApplicationScreen> {
   Future<void> _submitApplication() async {
     if (!_formKey.currentState!.validate()) return;
 
-    if (_idCardFront == null || _idCardBack == null || 
+    if (_idCardFront == null || _idCardBack == null ||
         _driverLicense == null || _vehicleRegistration == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -101,21 +105,56 @@ class _DriverApplicationScreenState extends State<DriverApplicationScreen> {
 
     setState(() => _isSubmitting = true);
 
-    // TODO: Implement actual API call when backend is ready
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      final authProvider = context.read<AuthProvider>();
+      final user = authProvider.user;
 
-    setState(() => _isSubmitting = false);
+      if (user == null) {
+        throw Exception('User not logged in');
+      }
 
-    if (!mounted) return;
+      final driverService = DriverService(ApiService().dio);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Application submitted! Admin will review within 48 hours.'),
-        backgroundColor: Colors.green,
-        duration: Duration(seconds: 4),
-      ),
-    );
-    context.go('/login');
+      // Merge ID card front and back - use front as primary
+      await driverService.applyAsDriver(
+        fullName: user.name,
+        phone: user.phone ?? '',
+        email: user.email,
+        address: 'Vehicle Plate: ${_vehiclePlateController.text.trim()}',
+        city: user.city ?? 'Unknown',
+        vehicleType: _vehicleType,
+        idDocumentUrl: _idCardFront!.path,
+        drivingLicenseUrl: _driverLicense!.path,
+        vehicleRegistrationUrl: _vehicleRegistration!.path,
+      );
+
+      if (!mounted) return;
+
+      setState(() => _isSubmitting = false);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Application submitted! Admin will review within 48 hours.'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 4),
+        ),
+      );
+
+      // Navigate back to profile
+      context.pop();
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() => _isSubmitting = false);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to submit application: $e'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    }
   }
 
   Widget _buildImagePicker(String label, String type, File? image) {

@@ -63,16 +63,6 @@ class _LoginScreenState extends State<LoginScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        actions: [
-          TextButton.icon(
-            icon: const Icon(Icons.local_shipping, size: 18),
-            label: const Text('Apply as Driver'),
-            style: TextButton.styleFrom(
-              foregroundColor: AppTheme.primaryColor,
-            ),
-            onPressed: () => context.push('/driver-application'),
-          ),
-        ],
       ),
       body: LoadingOverlay(
         isLoading: _isLoading,

@@ -9,6 +9,7 @@ import '../../models/category_enum.dart';
 import '../../widgets/items/item_card.dart';
 import '../../widgets/items/category_chip.dart';
 import '../../widgets/items/empty_state.dart';
+import '../../services/api_service.dart';
 import 'filter_bottom_sheet.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -213,29 +214,30 @@ class _HomeScreenState extends State<HomeScreen> {
 
       body: Column(
         children: [
+          // Search bar - more compact
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             color: Colors.white,
             child: GestureDetector(
               onTap: () {
                 context.push('/search');
               },
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
                   color: Colors.grey[100],
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(10),
                   border: Border.all(color: Colors.grey[300]!),
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.search, color: Colors.grey[500]),
-                    const SizedBox(width: 12),
+                    Icon(Icons.search, color: Colors.grey[500], size: 20),
+                    const SizedBox(width: 10),
                     Text(
                       'Search for items...',
                       style: TextStyle(
                         color: Colors.grey[500],
-                        fontSize: 16,
+                        fontSize: 14,
                       ),
                     ),
                   ],
@@ -243,39 +245,43 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
-          
+
+          // User greeting - more compact
           if (user != null)
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               color: Colors.white,
               child: Row(
                 children: [
                   CircleAvatar(
+                    radius: 16,
                     backgroundColor: Theme.of(context).primaryColor,
                     child: Text(
                       user.name[0].toUpperCase(),
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
+                        fontSize: 14,
                       ),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
                           'Hello, ${user.name.split(' ').first}!',
                           style: const TextStyle(
-                            fontSize: 16,
+                            fontSize: 14,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         Text(
                           'Find sustainable fashion',
                           style: TextStyle(
-                            fontSize: 13,
+                            fontSize: 11,
                             color: Colors.grey[600],
                           ),
                         ),
@@ -286,22 +292,24 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
 
+          // Categories - more compact
           Container(
-            height: 50,
+            height: 38,
             color: Colors.white,
+            padding: const EdgeInsets.symmetric(vertical: 4),
             child: ListView(
               scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 12),
               children: [
                 CategoryChip(
                   label: 'All',
                   isSelected: _selectedCategory == null,
                   onTap: () => _onCategorySelected(null),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 6),
                 ...Category.all.map(
                   (category) => Padding(
-                    padding: const EdgeInsets.only(right: 8),
+                    padding: const EdgeInsets.only(right: 6),
                     child: CategoryChip(
                       label: category.displayName,
                       isSelected: _selectedCategory == category.value,
@@ -313,8 +321,9 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
 
+          // Filter and Sort buttons - more compact
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
               color: Colors.white,
               border: Border(
@@ -335,28 +344,38 @@ class _HomeScreenState extends State<HomeScreen> {
                         onPressed: _showFilterSheet,
                         icon: Icon(
                           hasFilters ? Icons.filter_alt : Icons.filter_alt_outlined,
-                          size: 18,
+                          size: 16,
                         ),
                         label: Text(
-                          hasFilters ? 'Filters Applied' : 'Filter',
+                          hasFilters ? 'Filters' : 'Filter',
+                          style: const TextStyle(fontSize: 13),
                         ),
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: hasFilters 
-                              ? Theme.of(context).primaryColor 
+                          foregroundColor: hasFilters
+                              ? Theme.of(context).primaryColor
                               : Colors.grey[700],
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          minimumSize: const Size(0, 32),
                         ),
                       );
                     },
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 8),
                 Expanded(
                   child: Consumer<ItemsProvider>(
                     builder: (context, provider, child) {
                       return OutlinedButton.icon(
                         onPressed: _showSortOptions,
-                        icon: const Icon(Icons.sort, size: 18),
-                        label: Text(_getSortLabel(provider.sortBy)),
+                        icon: const Icon(Icons.sort, size: 16),
+                        label: Text(
+                          _getSortLabel(provider.sortBy),
+                          style: const TextStyle(fontSize: 13),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          minimumSize: const Size(0, 32),
+                        ),
                       );
                     },
                   ),
@@ -476,48 +495,49 @@ class _StatsBarState extends State<_StatsBar> {
     super.initState();
     _fetchStats();
   }
-Future<void> _fetchStats() async {
-  try {
-    final dio = Dio();
-    final response = await dio.get('http://127.0.0.1:8000/api/admin/stats');
 
-    if (!mounted) return; // ✅ prevents setState after dispose
+  Future<void> _fetchStats() async {
+    try {
+      final apiService = ApiService();
+      final response = await apiService.dio.get('/admin/stats');
 
-    setState(() {
-      _stats = {
-        'items_sold': response.data['data']['items_sold'] ?? 0,
-        'total_donations': response.data['data']['total_donations'] ?? 0,
-      };
-      _isLoading = false;
-    });
-  } catch (e) {
-    if (!mounted) return; // ✅ prevents setState after dispose
+      if (!mounted) return;
 
-    setState(() {
-      _stats = {'items_sold': 0, 'total_donations': 0};
-      _isLoading = false;
-    });
+      setState(() {
+        _stats = {
+          'items_sold': response.data['data']['total_items_sold'] ?? 0,
+          'total_donations': response.data['data']['total_donations'] ?? 0,
+        };
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      // Set default values on error, still show the widget
+      setState(() {
+        _stats = {'items_sold': 0, 'total_donations': 0};
+        _isLoading = false;
+      });
+    }
   }
-}
-
 
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
       return Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         child: const Center(
           child: SizedBox(
-            height: 20,
-            width: 20,
-            child: CircularProgressIndicator(strokeWidth: 2),
+            height: 14,
+            width: 14,
+            child: CircularProgressIndicator(strokeWidth: 1.5),
           ),
         ),
       );
     }
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: Colors.grey[50],
         border: Border(
@@ -529,16 +549,16 @@ Future<void> _fetchStats() async {
           Expanded(
             child: _StatCard(
               icon: Icons.shopping_bag_outlined,
-              label: 'Items Sold',
+              label: 'Sold',
               value: '${_stats!['items_sold']}',
               color: const Color(0xFF2A9D8F),
             ),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 10),
           Expanded(
             child: _StatCard(
               icon: Icons.volunteer_activism_outlined,
-              label: 'Donations',
+              label: 'Donated',
               value: '${_stats!['total_donations']}',
               color: const Color(0xFFE76F51),
             ),
@@ -565,45 +585,33 @@ class _StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.3)),
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withOpacity(0.2), width: 1),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(10),
+          Icon(icon, color: color, size: 16),
+          const SizedBox(width: 6),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.bold,
+              color: color,
             ),
-            child: Icon(icon, color: color, size: 24),
           ),
-          const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                value,
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: color,
-                ),
-              ),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[600],
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              color: Colors.grey[600],
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ],
       ),
