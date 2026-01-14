@@ -122,7 +122,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
 
     if (success) {
       Helpers.showSnackBar(context, 'Registration successful!');
-      context.go('/home');
+      context.go('/');
     } else {
       Helpers.showSnackBar(
         context,
