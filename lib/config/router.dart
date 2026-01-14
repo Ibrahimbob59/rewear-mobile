@@ -38,6 +38,7 @@ import '../screens/charity/pending_donations_screen.dart';
 import '../screens/charity/impact_stats_screen.dart';
 import '../screens/admin/admin_driver_applications_screen.dart';
 import '../screens/admin/admin_driver_application_detail_screen.dart';
+import '../screens/notifications/notifications_screen.dart';
 
 import '../services/storage_service.dart';
 import '../providers/auth_provider.dart';
@@ -215,6 +216,9 @@ class AppRouter {
       ),
 
       GoRoute(path: '/favorites', builder: (context, state) => const FavoritesScreen()),
+
+      // ========== NOTIFICATIONS ==========
+      GoRoute(path: '/notifications', builder: (context, state) => const NotificationsScreen()),
 
       // ========== DRIVER ROUTES ==========
       GoRoute(path: '/driver-application', builder: (context, state) => const DriverApplicationScreen()),

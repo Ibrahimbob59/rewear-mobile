@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
-import 'package:dio/dio.dart';
 import '../../providers/items_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/cart_provider.dart';
+import '../../providers/notifications_provider.dart';
 import '../../models/category_enum.dart';
 import '../../widgets/items/item_card.dart';
 import '../../widgets/items/category_chip.dart';
@@ -26,9 +26,10 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<ItemsProvider>().loadItems(refresh: true);
+      context.read<NotificationsProvider>().loadUnreadCount();
     });
 
     _scrollController.addListener(_onScroll);
@@ -165,6 +166,50 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: const Icon(Icons.favorite_border),
             onPressed: () {
               context.push('/favorites');
+            },
+          ),
+
+          Consumer<NotificationsProvider>(
+            builder: (context, notifications, _) {
+              return Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.notifications_outlined),
+                    onPressed: () {
+                      context.push('/notifications');
+                    },
+                  ),
+                  if (notifications.unreadCount > 0)
+                    Positioned(
+                      right: 8,
+                      top: 8,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 1.5),
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 18,
+                          minHeight: 18,
+                        ),
+                        child: Text(
+                          notifications.unreadCount > 99
+                              ? '99+'
+                              : notifications.unreadCount.toString(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                ],
+              );
             },
           ),
 
@@ -587,9 +632,9 @@ class _StatCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withOpacity(0.2), width: 1),
+        border: Border.all(color: color.withValues(alpha: 0.2), width: 1),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,

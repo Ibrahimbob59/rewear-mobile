@@ -17,6 +17,7 @@ import 'services/delivery_service.dart';
 import 'services/charity_service.dart';
 import 'services/location_service.dart';
 import 'services/storage_service.dart';
+import 'services/notifications_service.dart';
 
 // Providers
 import 'providers/auth_provider.dart';
@@ -28,6 +29,7 @@ import 'providers/addresses_provider.dart';
 import 'providers/driver_provider.dart';
 import 'providers/delivery_provider.dart';
 import 'providers/charity_provider.dart';
+import 'providers/notifications_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -144,6 +146,7 @@ void main() async {
   final deliveryService = DeliveryService(dio);
   final charityService = CharityService(dio);
   final locationService = LocationService();
+  final notificationsService = NotificationsService(dio);
 
   // Create AuthProvider instance and initialize
   final authProvider = AuthProvider();
@@ -166,6 +169,7 @@ void main() async {
         ),
 
         ChangeNotifierProvider(create: (_) => CharityProvider(charityService)),
+        ChangeNotifierProvider(create: (_) => NotificationsProvider(notificationsService)),
       ],
       child: const MyApp(),
     ),
