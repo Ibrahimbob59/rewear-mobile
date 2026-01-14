@@ -1,0 +1,1885 @@
+{
+  "project_metadata": {
+    "project_name": "ReWear Mobile",
+    "description": "Sustainable Fashion Marketplace Mobile App",
+    "version": "1.0.0+1",
+    "framework": "Flutter",
+    "language": "Dart",
+    "sdk_version": ">=3.0.0 <4.0.0",
+    "platform": "Cross-platform (iOS & Android)",
+    "development_year": "2024",
+    "project_type": "Final Year Project (FYP)"
+  },
+
+  "project_overview": {
+    "concept": "ReWear is a comprehensive sustainable fashion marketplace mobile application that promotes circular economy by enabling users to buy, sell, and donate pre-owned clothing items. The platform connects multiple stakeholders - regular users, delivery drivers, charitable organizations, and administrators - in a unified ecosystem designed to reduce textile waste and extend the lifecycle of fashion items.",
+    "mission": "To create a sustainable fashion ecosystem that reduces clothing waste, promotes reusability, and supports charitable causes through seamless technology integration.",
+    "target_audience": [
+      "Environmentally conscious consumers",
+      "Budget-conscious fashion seekers",
+      "Charitable organizations",
+      "Delivery drivers seeking flexible employment",
+      "Sellers of pre-owned clothing"
+    ]
+  },
+
+  "architecture": {
+    "pattern": "Clean Architecture with MVC/MVVM",
+    "state_management": "Provider Pattern",
+    "navigation": "Declarative Routing using GoRouter",
+    "directory_structure": {
+      "lib/": {
+        "config/": "Configuration files (theme, router, constants, app config)",
+        "models/": "Data models and enums for domain entities",
+        "providers/": "State management providers using Provider pattern",
+        "screens/": "UI screens organized by feature module",
+        "services/": "Business logic and API integration services",
+        "widgets/": "Reusable UI components organized by category",
+        "utils/": "Helper utility functions",
+        "main.dart": "Application entry point with DI setup"
+      },
+      "assets/": {
+        "images/": "Static image assets",
+        "icons/": "Custom icon assets",
+        "animations/": "Lottie animation files",
+        "fonts/": "Custom font files (Inter)"
+      }
+    },
+    "key_architectural_principles": [
+      "Separation of Concerns",
+      "Single Responsibility Principle",
+      "Dependency Injection via Provider",
+      "Service Layer Pattern",
+      "Repository Pattern for data access"
+    ]
+  },
+
+  "features": {
+    "core_features": [
+      {
+        "name": "User Authentication",
+        "description": "Secure authentication system with email verification and role-based access control",
+        "details": "Login, registration with OTP verification, password recovery, session management with JWT tokens"
+      },
+      {
+        "name": "Marketplace Browsing",
+        "description": "Browse and search pre-owned clothing items with advanced filtering",
+        "details": "Category filtering, size selection, condition filtering, price range, distance-based search, favorites system"
+      },
+      {
+        "name": "Item Listing",
+        "description": "List items for sale or donation with image uploads",
+        "details": "Multiple image support, image cropping, detailed descriptions, pricing or donation option, location tagging"
+      },
+      {
+        "name": "Shopping Cart & Checkout",
+        "description": "E-commerce functionality for purchasing items",
+        "details": "Add to cart, quantity management, address selection, order summary, payment integration, order confirmation"
+      },
+      {
+        "name": "Donation System",
+        "description": "Donate items directly to registered charitable organizations",
+        "details": "Charity selection, donation tracking, acceptance workflow, impact statistics"
+      },
+      {
+        "name": "Delivery Management",
+        "description": "Integrated delivery system with real-time tracking",
+        "details": "Driver assignment, GPS tracking, delivery status updates, proof of delivery, COD support"
+      },
+      {
+        "name": "Order Tracking",
+        "description": "Real-time order status tracking with notifications",
+        "details": "Status milestones, location tracking, driver communication, estimated delivery time"
+      },
+      {
+        "name": "Notifications",
+        "description": "Firebase Cloud Messaging for push notifications",
+        "details": "Order updates, delivery notifications, donation alerts, promotional messages"
+      },
+      {
+        "name": "Profile Management",
+        "description": "Comprehensive user profile management",
+        "details": "Profile editing, address book management, order history, password change, account deactivation"
+      },
+      {
+        "name": "Driver Portal",
+        "description": "Dedicated interface for delivery drivers",
+        "details": "Application process, available deliveries, active delivery management, earnings tracking, delivery history"
+      },
+      {
+        "name": "Charity Portal",
+        "description": "Specialized interface for charitable organizations",
+        "details": "Donation management, acceptance workflow, claimed items, impact statistics, pending donation review"
+      },
+      {
+        "name": "Admin Dashboard",
+        "description": "Administrative interface for platform management",
+        "details": "Driver application reviews, user management, platform oversight"
+      }
+    ]
+  },
+
+  "user_roles": {
+    "regular_user": {
+      "description": "Standard users who buy, sell, and donate items",
+      "permissions": [
+        "Browse and search marketplace",
+        "Purchase items",
+        "List items for sale",
+        "Donate items to charities",
+        "Manage orders and deliveries",
+        "Save favorites",
+        "Manage profile and addresses",
+        "Track orders in real-time",
+        "Apply to become a driver",
+        "Receive notifications"
+      ],
+      "key_screens": [
+        "Home Screen (Marketplace)",
+        "Item Detail Screen",
+        "Cart & Checkout",
+        "Orders Screen",
+        "Profile Screen"
+      ]
+    },
+    "driver": {
+      "description": "Delivery personnel who transport items between sellers and buyers",
+      "permissions": [
+        "View available delivery assignments",
+        "Accept delivery requests",
+        "Update delivery status and location",
+        "View earnings and payment history",
+        "Manage availability status",
+        "View delivery history",
+        "Communicate with buyers/sellers"
+      ],
+      "key_screens": [
+        "Driver Dashboard",
+        "Available Deliveries",
+        "Active Delivery Screen",
+        "Delivery History",
+        "Earnings Screen"
+      ],
+      "application_process": "Users must apply through Driver Application Screen, providing vehicle details, license information, and vehicle images. Applications are reviewed by administrators before approval."
+    },
+    "charity": {
+      "description": "Registered charitable organizations receiving donated items",
+      "permissions": [
+        "View pending donations",
+        "Accept or reject donation offers",
+        "Manage claimed items",
+        "Track impact statistics",
+        "View donation history",
+        "Manage charity profile"
+      ],
+      "key_screens": [
+        "Charity Home",
+        "Charity Dashboard",
+        "Pending Donations",
+        "Charity Donations",
+        "Claimed Items",
+        "Impact Stats"
+      ]
+    },
+    "admin": {
+      "description": "Platform administrators with oversight capabilities",
+      "permissions": [
+        "Review driver applications",
+        "Approve or reject driver registrations",
+        "View platform statistics",
+        "Manage user accounts",
+        "Monitor system activities"
+      ],
+      "key_screens": [
+        "Admin Driver Applications",
+        "Driver Application Detail"
+      ]
+    }
+  },
+
+  "screens": {
+    "authentication_screens": [
+      {
+        "name": "LoginScreen",
+        "file": "lib/screens/auth/login_screen.dart",
+        "route": "/login",
+        "purpose": "User authentication with email and password",
+        "features": [
+          "Email and password input fields",
+          "Remember me functionality",
+          "Forgot password link",
+          "Navigate to registration",
+          "Form validation",
+          "Error handling",
+          "Loading indicators"
+        ]
+      },
+      {
+        "name": "RegisterScreen",
+        "file": "lib/screens/auth/register_screen.dart",
+        "route": "/register",
+        "purpose": "New user registration with account type selection",
+        "features": [
+          "Name, email, phone inputs",
+          "Password with strength indicator",
+          "User type selection (user/charity)",
+          "Terms and conditions agreement",
+          "OTP verification trigger",
+          "Form validation"
+        ]
+      },
+      {
+        "name": "OTPVerificationScreen",
+        "file": "lib/screens/auth/otp_verification_screen.dart",
+        "route": "/otp-verification",
+        "purpose": "Email verification via One-Time Password",
+        "features": [
+          "6-digit OTP input",
+          "Resend code functionality",
+          "Countdown timer",
+          "Auto-verification",
+          "Error handling"
+        ]
+      },
+      {
+        "name": "ForgotPasswordScreen",
+        "file": "lib/screens/auth/forgot_password_screen.dart",
+        "route": "/forgot-password",
+        "purpose": "Password recovery for locked accounts",
+        "features": [
+          "Email input",
+          "Reset link sending",
+          "Success notification"
+        ]
+      }
+    ],
+    "main_navigation_screens": [
+      {
+        "name": "HomeScreen",
+        "file": "lib/screens/home/home_screen.dart",
+        "route": "/",
+        "purpose": "Main marketplace browsing interface",
+        "features": [
+          "Search bar at top",
+          "Category filter chips",
+          "Item grid/list view",
+          "Pull-to-refresh",
+          "Infinite scroll pagination",
+          "Item cards with images, price, distance",
+          "Add to favorites quick action",
+          "Navigation to item details",
+          "Empty state handling",
+          "Filter bottom sheet"
+        ]
+      },
+      {
+        "name": "SellingScreen",
+        "file": "lib/screens/selling/selling_screen.dart",
+        "route": "/selling",
+        "purpose": "Manage user's listed items for sale and donation",
+        "features": [
+          "List of user's items",
+          "Item status indicators (available, sold, reserved)",
+          "Edit item functionality",
+          "Toggle item availability",
+          "Delete item option",
+          "Create new item button",
+          "Filter by status",
+          "Empty state with CTA"
+        ]
+      },
+      {
+        "name": "OrdersScreen",
+        "file": "lib/screens/orders/orders_screen.dart",
+        "route": "/orders",
+        "purpose": "View and manage user's purchase and sale orders",
+        "features": [
+          "Tab-based layout (Buying/Selling)",
+          "Order cards with status",
+          "Order number and date",
+          "Item preview",
+          "Status badges",
+          "Navigate to order details",
+          "Filter by status",
+          "Pull-to-refresh"
+        ]
+      },
+      {
+        "name": "ProfileScreen",
+        "file": "lib/screens/profile/profile_screen.dart",
+        "route": "/profile",
+        "purpose": "User profile and account management",
+        "features": [
+          "Profile picture with edit option",
+          "User information display",
+          "Statistics (orders, listings, etc.)",
+          "Quick action buttons",
+          "Menu options (Edit Profile, Addresses, Notifications, Change Password, Deactivate, Logout)",
+          "Role-based options (Driver application, Charity dashboard)"
+        ]
+      },
+      {
+        "name": "CartScreen",
+        "file": "lib/screens/cart/cart_screen.dart",
+        "route": "/cart",
+        "purpose": "Shopping cart management",
+        "features": [
+          "Cart items list with quantity controls",
+          "Item removal",
+          "Price calculation",
+          "Delivery fee estimation",
+          "Cart summary",
+          "Proceed to checkout button",
+          "Empty cart state"
+        ]
+      }
+    ],
+    "item_management_screens": [
+      {
+        "name": "ItemDetailScreen",
+        "file": "lib/screens/items/item_detail_screen.dart",
+        "route": "/item/:id",
+        "purpose": "View detailed information about a specific item",
+        "features": [
+          "Image carousel with zoom",
+          "Item title and description",
+          "Price or donation badge",
+          "Category, size, condition tags",
+          "Seller information card",
+          "Distance indicator",
+          "Add to favorites button",
+          "Add to cart / Donate now CTA",
+          "Seller location map",
+          "Share functionality",
+          "Related items suggestions"
+        ]
+      },
+      {
+        "name": "CreateItemScreen",
+        "file": "lib/screens/items/create_item_screen.dart",
+        "route": "/create-item",
+        "purpose": "Create new item listing for sale or donation",
+        "features": [
+          "Multiple image upload with preview",
+          "Image cropping and reordering",
+          "Title and description inputs",
+          "Category dropdown",
+          "Size selection",
+          "Condition selection",
+          "Gender selection",
+          "Brand input",
+          "Color input",
+          "Price input or donation toggle",
+          "Location auto-detection",
+          "Form validation",
+          "Progressive image upload with progress bar"
+        ]
+      },
+      {
+        "name": "EditItemScreen",
+        "file": "lib/screens/items/edit_item_screen.dart",
+        "route": "/edit-item/:id",
+        "purpose": "Edit existing item listing",
+        "features": [
+          "Pre-filled form with current data",
+          "Image management (add/remove)",
+          "All CreateItemScreen features",
+          "Save changes or cancel"
+        ]
+      },
+      {
+        "name": "MyListingsScreen",
+        "file": "lib/screens/items/my_listings_screen.dart",
+        "route": "/my-listings",
+        "purpose": "View and manage user's listed items",
+        "features": [
+          "Grid/list view toggle",
+          "Filter by status",
+          "Quick actions (edit, delete, toggle status)",
+          "Analytics (views, favorites)"
+        ]
+      },
+      {
+        "name": "SearchScreen",
+        "file": "lib/screens/search/search_screen.dart",
+        "route": "/search",
+        "purpose": "Advanced search functionality",
+        "features": [
+          "Search input with autocomplete",
+          "Filter chips",
+          "Advanced filter bottom sheet",
+          "Sort options (price, distance, date)",
+          "Search results grid",
+          "No results handling",
+          "Recent searches"
+        ]
+      },
+      {
+        "name": "FavoritesScreen",
+        "file": "lib/screens/favorites/favorites_screen.dart",
+        "route": "/favorites",
+        "purpose": "View saved/favorited items",
+        "features": [
+          "Grid layout of favorite items",
+          "Remove from favorites",
+          "Navigate to item details",
+          "Filter and sort options",
+          "Empty state with shop CTA"
+        ]
+      }
+    ],
+    "order_management_screens": [
+      {
+        "name": "CheckoutScreen",
+        "file": "lib/screens/cart/checkout_screen.dart",
+        "route": "/checkout",
+        "purpose": "Complete purchase process",
+        "features": [
+          "Item summary",
+          "Address selection or add new",
+          "Delivery method selection",
+          "Payment method selection",
+          "Order summary with breakdown",
+          "Delivery fee calculation",
+          "Total amount display",
+          "Place order button",
+          "Terms acceptance"
+        ]
+      },
+      {
+        "name": "OrderDetailScreen",
+        "file": "lib/screens/orders/order_detail_screen.dart",
+        "route": "/orders/:id",
+        "purpose": "View detailed order information",
+        "features": [
+          "Order status stepper",
+          "Item details with image",
+          "Buyer/seller information",
+          "Delivery address",
+          "Payment information",
+          "Timeline of events",
+          "Cancel order option (if applicable)",
+          "Contact support",
+          "Track delivery button"
+        ]
+      },
+      {
+        "name": "OrderTrackingScreen",
+        "file": "lib/screens/delivery/order_tracking_screen.dart",
+        "route": "/track-order/:orderId",
+        "purpose": "Real-time order tracking with map",
+        "features": [
+          "Interactive map with route",
+          "Driver location marker",
+          "Delivery progress indicator",
+          "Estimated arrival time",
+          "Driver information",
+          "Call driver button",
+          "Order status milestones",
+          "Real-time updates"
+        ]
+      }
+    ],
+    "profile_management_screens": [
+      {
+        "name": "ProfileEditScreen",
+        "file": "lib/screens/profile/profile_edit_screen.dart",
+        "route": "/profile/edit",
+        "purpose": "Edit user profile information",
+        "features": [
+          "Profile picture upload with crop",
+          "Name input",
+          "Email (read-only)",
+          "Phone input",
+          "Bio text area",
+          "City input",
+          "Location coordinates",
+          "Save changes",
+          "Image upload with progress"
+        ]
+      },
+      {
+        "name": "ChangePasswordScreen",
+        "file": "lib/screens/profile/change_password_screen.dart",
+        "route": "/profile/change-password",
+        "purpose": "Update account password",
+        "features": [
+          "Current password input",
+          "New password input with strength indicator",
+          "Confirm password input",
+          "Password visibility toggles",
+          "Validation messages",
+          "Submit button"
+        ]
+      },
+      {
+        "name": "DeactivateAccountScreen",
+        "file": "lib/screens/profile/deactivate_account_screen.dart",
+        "route": "/profile/deactivate",
+        "purpose": "Permanently delete user account",
+        "features": [
+          "Warning message",
+          "Consequences explanation",
+          "Password confirmation",
+          "Checkbox to confirm understanding",
+          "Deactivate button",
+          "Cancellation option"
+        ]
+      }
+    ],
+    "address_management_screens": [
+      {
+        "name": "AddressesScreen",
+        "file": "lib/screens/addresses/addresses_screen.dart",
+        "route": "/addresses",
+        "purpose": "Manage saved delivery addresses",
+        "features": [
+          "List of saved addresses",
+          "Default address indicator",
+          "Edit address action",
+          "Delete address action",
+          "Set as default action",
+          "Add new address button",
+          "Swipe actions"
+        ]
+      },
+      {
+        "name": "AddAddressScreen",
+        "file": "lib/screens/addresses/add_address_screen.dart",
+        "route": "/add-address",
+        "purpose": "Add new delivery address",
+        "features": [
+          "Address line 1 and 2 inputs",
+          "City input",
+          "State/region input",
+          "Country input",
+          "Postal code input",
+          "Phone number input",
+          "Set as default checkbox",
+          "Auto-detect location button",
+          "Map for location pin",
+          "Save button"
+        ]
+      },
+      {
+        "name": "EditAddressScreen",
+        "file": "lib/screens/addresses/edit_address_screen.dart",
+        "route": "/edit-address/:id",
+        "purpose": "Edit existing address",
+        "features": "Same as AddAddressScreen with pre-filled data"
+      }
+    ],
+    "driver_screens": [
+      {
+        "name": "DriverApplicationScreen",
+        "file": "lib/screens/driver/driver_application_screen.dart",
+        "route": "/driver-application",
+        "purpose": "Apply to become a delivery driver",
+        "features": [
+          "Personal information (name, phone)",
+          "Vehicle type selection (car, motorcycle, bicycle)",
+          "Vehicle number input",
+          "License number input",
+          "License image upload",
+          "Vehicle image upload",
+          "Terms and conditions",
+          "Submit application",
+          "Application status tracking",
+          "Image upload with cropping"
+        ]
+      },
+      {
+        "name": "DriverDashboardScreen",
+        "file": "lib/screens/driver/driver_dashboard_screen.dart",
+        "route": "/driver/dashboard",
+        "purpose": "Driver's main dashboard and overview",
+        "features": [
+          "Welcome message with driver name",
+          "Current status indicator (available/busy)",
+          "Today's earnings card",
+          "Total deliveries count",
+          "Rating display",
+          "Quick actions (Available deliveries, Active delivery, History, Earnings)",
+          "Availability toggle",
+          "Notification badges"
+        ]
+      },
+      {
+        "name": "AvailableDeliveriesScreen",
+        "file": "lib/screens/driver/available_deliveries_screen.dart",
+        "route": "/driver/available-deliveries",
+        "purpose": "View and accept available delivery assignments",
+        "features": [
+          "List of available deliveries",
+          "Delivery cards with key info",
+          "Pickup and drop locations",
+          "Delivery fee display",
+          "Distance and estimated time",
+          "COD amount indicator",
+          "Accept delivery button",
+          "Filter by distance/fee",
+          "Pull-to-refresh",
+          "Empty state"
+        ]
+      },
+      {
+        "name": "ActiveDeliveryScreen",
+        "file": "lib/screens/driver/active_delivery_screen.dart",
+        "route": "/driver/delivery/:deliveryId",
+        "purpose": "Manage currently active delivery",
+        "features": [
+          "Delivery status stepper",
+          "Order details",
+          "Pickup address with map",
+          "Delivery address with map",
+          "Customer contact information",
+          "COD amount display",
+          "Update status buttons (Picked up, In transit, Delivered)",
+          "Call customer buttons",
+          "Navigation to maps app",
+          "Delivery notes input",
+          "Proof of delivery options (photo, signature)",
+          "Real-time location sharing"
+        ]
+      },
+      {
+        "name": "DeliveryHistoryScreen",
+        "file": "lib/screens/driver/delivery_history_screen.dart",
+        "route": "/driver/history",
+        "purpose": "View past delivery records",
+        "features": [
+          "Chronological list of deliveries",
+          "Filter by date range",
+          "Filter by status",
+          "Delivery cards with summary",
+          "Earning per delivery",
+          "Navigate to delivery details",
+          "Total earnings summary"
+        ]
+      },
+      {
+        "name": "DriverEarningsScreen",
+        "file": "lib/screens/driver/driver_earnings_screen.dart",
+        "route": "/driver/earnings",
+        "purpose": "Track and view earnings",
+        "features": [
+          "Total earnings display",
+          "Today's/This week's/This month's earnings",
+          "Earnings chart/graph",
+          "Breakdown by delivery",
+          "Platform fee information",
+          "Payment history",
+          "Payout information",
+          "Filter by time period"
+        ]
+      }
+    ],
+    "charity_screens": [
+      {
+        "name": "CharityHomeScreen",
+        "file": "lib/screens/charity/charity_home_screen.dart",
+        "route": "/charity/home",
+        "purpose": "Charity organization's main interface",
+        "features": [
+          "Welcome message with charity name",
+          "Quick stats cards",
+          "Recent donations feed",
+          "Pending donations indicator",
+          "Quick actions",
+          "Impact highlights",
+          "Navigation to dashboard"
+        ]
+      },
+      {
+        "name": "CharityDashboardScreen",
+        "file": "lib/screens/charity/charity_dashboard_screen.dart",
+        "route": "/charity/dashboard",
+        "purpose": "Charity's comprehensive dashboard",
+        "features": [
+          "Overview statistics",
+          "Recent activity timeline",
+          "Pending donations count",
+          "Accepted donations count",
+          "People helped counter",
+          "Quick action buttons",
+          "Impact visualization"
+        ]
+      },
+      {
+        "name": "CharityDonationsScreen",
+        "file": "lib/screens/charity/charity_donations_screen.dart",
+        "route": "/charity/donations",
+        "purpose": "View all received donations",
+        "features": [
+          "List of all donations",
+          "Filter by status (pending, accepted, rejected)",
+          "Sort by date",
+          "Donation cards with item details",
+          "Donor information",
+          "Donation date",
+          "Quick action buttons",
+          "Pull-to-refresh"
+        ]
+      },
+      {
+        "name": "PendingDonationsScreen",
+        "file": "lib/screens/charity/pending_donations_screen.dart",
+        "route": "/charity/pending-donations",
+        "purpose": "Review and manage pending donations",
+        "features": [
+          "List of pending donations",
+          "Item preview with images",
+          "Donor information",
+          "Item condition and description",
+          "Accept/Reject buttons",
+          "Notes input for rejection",
+          "Batch actions",
+          "Filter by category"
+        ]
+      },
+      {
+        "name": "CharityClaimedScreen",
+        "file": "lib/screens/charity/charity_claimed_screen.dart",
+        "route": "/charity/claimed",
+        "purpose": "View claimed/accepted donations",
+        "features": [
+          "List of claimed items",
+          "Item details",
+          "Claim date",
+          "Status indicators",
+          "Arrange pickup/delivery options",
+          "Mark as received"
+        ]
+      },
+      {
+        "name": "CharityDonateScreen",
+        "file": "lib/screens/charity/charity_donate_screen.dart",
+        "route": "/charity/donate",
+        "purpose": "Special donation interface for charities",
+        "features": [
+          "Browse items available for donation",
+          "Filter by category, condition",
+          "Item details",
+          "Request donation button",
+          "Donation history",
+          "Impact tracking"
+        ]
+      },
+      {
+        "name": "ImpactStatsScreen",
+        "file": "lib/screens/charity/impact_stats_screen.dart",
+        "route": "/charity/impact-stats",
+        "purpose": "View charity's impact statistics",
+        "features": [
+          "Total donations received",
+          "People helped counter",
+          "Categories breakdown chart",
+          "Monthly donation trends",
+          "Environmental impact (CO2 saved, water saved)",
+          "Share impact functionality",
+          "Export reports"
+        ]
+      }
+    ],
+    "admin_screens": [
+      {
+        "name": "AdminDriverApplicationsScreen",
+        "file": "lib/screens/admin/admin_driver_applications_screen.dart",
+        "route": "/admin/driver-applications",
+        "purpose": "View all driver applications",
+        "features": [
+          "List of all driver applications",
+          "Filter by status (pending, approved, rejected)",
+          "Search by name/email",
+          "Sort by date",
+          "Quick approve/reject actions",
+          "Application count badges",
+          "Pull-to-refresh"
+        ]
+      },
+      {
+        "name": "AdminDriverApplicationDetailScreen",
+        "file": "lib/screens/admin/admin_driver_application_detail_screen.dart",
+        "route": "/admin/driver-applications/:id",
+        "purpose": "Review individual driver application",
+        "features": [
+          "Applicant information",
+          "Vehicle details",
+          "License number display",
+          "License image viewer (zoomable)",
+          "Vehicle image viewer (zoomable)",
+          "Application date",
+          "Approve/Reject buttons with reason",
+          "Add notes",
+          "Contact applicant option",
+          "Application history"
+        ]
+      }
+    ],
+    "utility_screens": [
+      {
+        "name": "NotificationsScreen",
+        "file": "lib/screens/notifications/notifications_screen.dart",
+        "route": "/notifications",
+        "purpose": "View all notifications",
+        "features": [
+          "List of notifications",
+          "Read/unread indicators",
+          "Notification type icons",
+          "Timestamp with relative time",
+          "Mark as read functionality",
+          "Mark all as read",
+          "Delete notifications",
+          "Filter by type",
+          "Pull-to-refresh",
+          "Empty state"
+        ]
+      }
+    ]
+  },
+
+  "data_models": {
+    "user_model": {
+      "file": "lib/models/user_model.dart",
+      "properties": [
+        {"name": "id", "type": "int", "description": "Unique user identifier"},
+        {"name": "name", "type": "String", "description": "User's full name"},
+        {"name": "email", "type": "String", "description": "User's email address"},
+        {"name": "phone", "type": "String?", "description": "Phone number (optional)"},
+        {"name": "role", "type": "String?", "description": "User's role (admin, user, etc.)"},
+        {"name": "userType", "type": "String", "description": "Type of user (user, charity)"},
+        {"name": "profilePicture", "type": "String?", "description": "URL to profile image"},
+        {"name": "bio", "type": "String?", "description": "User biography"},
+        {"name": "city", "type": "String?", "description": "User's city"},
+        {"name": "latitude", "type": "double?", "description": "Location latitude"},
+        {"name": "longitude", "type": "double?", "description": "Location longitude"},
+        {"name": "isDriver", "type": "bool", "description": "Whether user is a driver"},
+        {"name": "driverVerified", "type": "bool", "description": "Driver verification status"},
+        {"name": "emailVerified", "type": "bool", "description": "Email verification status"},
+        {"name": "emailVerifiedAt", "type": "DateTime?", "description": "Email verification timestamp"},
+        {"name": "lastLoginAt", "type": "DateTime?", "description": "Last login timestamp"},
+        {"name": "createdAt", "type": "DateTime?", "description": "Account creation timestamp"},
+        {"name": "updatedAt", "type": "DateTime?", "description": "Last update timestamp"},
+        {"name": "roles", "type": "List<String>?", "description": "List of user roles"},
+        {"name": "permissions", "type": "List<String>?", "description": "List of permissions"}
+      ],
+      "helper_methods": [
+        {"name": "isAdmin", "return": "bool", "description": "Check if user has admin role"},
+        {"name": "isCharity", "return": "bool", "description": "Check if user is charity type"},
+        {"name": "isVerifiedDriver", "return": "bool", "description": "Check if user is verified driver"}
+      ]
+    },
+    "item_model": {
+      "file": "lib/models/item_model.dart",
+      "properties": [
+        {"name": "id", "type": "int", "description": "Unique item identifier"},
+        {"name": "title", "type": "String", "description": "Item title"},
+        {"name": "description", "type": "String", "description": "Item description"},
+        {"name": "category", "type": "Category", "description": "Item category (enum)"},
+        {"name": "size", "type": "Size", "description": "Item size (enum)"},
+        {"name": "condition", "type": "Condition", "description": "Item condition (enum)"},
+        {"name": "gender", "type": "Gender?", "description": "Target gender (enum)"},
+        {"name": "brand", "type": "String?", "description": "Brand name"},
+        {"name": "color", "type": "String?", "description": "Item color"},
+        {"name": "price", "type": "double?", "description": "Item price (null for donations)"},
+        {"name": "isDonation", "type": "bool", "description": "Whether item is for donation"},
+        {"name": "status", "type": "ItemStatus", "description": "Item availability status"},
+        {"name": "viewsCount", "type": "int", "description": "Number of views"},
+        {"name": "seller", "type": "ItemSeller", "description": "Seller information object"},
+        {"name": "images", "type": "List<ItemImage>", "description": "List of item images"},
+        {"name": "distanceKm", "type": "double?", "description": "Distance from user"},
+        {"name": "isFavorite", "type": "bool", "description": "Whether item is in favorites"},
+        {"name": "createdAt", "type": "DateTime", "description": "Creation timestamp"},
+        {"name": "updatedAt", "type": "DateTime", "description": "Last update timestamp"}
+      ],
+      "helper_methods": [
+        {"name": "primaryImageUrl", "return": "String", "description": "Get primary image URL"},
+        {"name": "priceDisplay", "return": "String", "description": "Formatted price string"},
+        {"name": "distanceDisplay", "return": "String", "description": "Formatted distance string"},
+        {"name": "canPurchase", "return": "bool", "description": "Check if item can be purchased"},
+        {"name": "canEdit", "return": "bool", "description": "Check if item can be edited"}
+      ],
+      "nested_models": {
+        "ItemImage": {
+          "properties": [
+            {"name": "id", "type": "int"},
+            {"name": "url", "type": "String"},
+            {"name": "isPrimary", "type": "bool"}
+          ]
+        },
+        "ItemSeller": {
+          "properties": [
+            {"name": "id", "type": "int"},
+            {"name": "name", "type": "String"},
+            {"name": "city", "type": "String?"},
+            {"name": "profilePicture", "type": "String?"},
+            {"name": "latitude", "type": "double?"},
+            {"name": "longitude", "type": "double?"}
+          ]
+        }
+      }
+    },
+    "order_model": {
+      "file": "lib/models/order_model.dart",
+      "properties": [
+        {"name": "id", "type": "int", "description": "Unique order identifier"},
+        {"name": "orderNumber", "type": "String", "description": "Human-readable order number"},
+        {"name": "item", "type": "OrderItem", "description": "Ordered item details"},
+        {"name": "buyer", "type": "OrderUser", "description": "Buyer information"},
+        {"name": "seller", "type": "OrderUser", "description": "Seller information"},
+        {"name": "deliveryAddress", "type": "Address?", "description": "Delivery location"},
+        {"name": "itemPrice", "type": "double", "description": "Price of the item"},
+        {"name": "deliveryFee", "type": "double", "description": "Delivery charge"},
+        {"name": "totalAmount", "type": "double", "description": "Total order amount"},
+        {"name": "status", "type": "OrderStatus", "description": "Order status (enum)"},
+        {"name": "paymentMethod", "type": "String", "description": "Payment method used"},
+        {"name": "paymentStatus", "type": "String", "description": "Payment status"},
+        {"name": "confirmedAt", "type": "DateTime?", "description": "Confirmation timestamp"},
+        {"name": "deliveredAt", "type": "DateTime?", "description": "Delivery timestamp"},
+        {"name": "cancelledAt", "type": "DateTime?", "description": "Cancellation timestamp"},
+        {"name": "cancellationReason", "type": "String?", "description": "Reason for cancellation"},
+        {"name": "createdAt", "type": "DateTime", "description": "Order creation timestamp"},
+        {"name": "updatedAt", "type": "DateTime", "description": "Last update timestamp"}
+      ],
+      "helper_methods": [
+        {"name": "canCancel", "return": "bool", "description": "Check if order can be cancelled"},
+        {"name": "isActive", "return": "bool", "description": "Check if order is active"},
+        {"name": "isCancelled", "return": "bool", "description": "Check if order is cancelled"},
+        {"name": "isCompleted", "return": "bool", "description": "Check if order is completed"},
+        {"name": "statusText", "return": "String", "description": "Status display text"},
+        {"name": "totalAmountDisplay", "return": "String", "description": "Formatted total amount"}
+      ],
+      "nested_models": {
+        "OrderItem": {
+          "properties": [
+            {"name": "id", "type": "int"},
+            {"name": "title", "type": "String"},
+            {"name": "image", "type": "String?"},
+            {"name": "price", "type": "double"}
+          ]
+        },
+        "OrderUser": {
+          "properties": [
+            {"name": "id", "type": "int"},
+            {"name": "name", "type": "String"},
+            {"name": "phone", "type": "String?"},
+            {"name": "profilePicture", "type": "String?"}
+          ]
+        }
+      }
+    },
+    "delivery_model": {
+      "file": "lib/models/delivery_model.dart",
+      "properties": [
+        {"name": "id", "type": "int", "description": "Unique delivery identifier"},
+        {"name": "orderId", "type": "int", "description": "Associated order ID"},
+        {"name": "driverId", "type": "int?", "description": "Assigned driver ID"},
+        {"name": "status", "type": "String", "description": "Delivery status"},
+        {"name": "deliveryFee", "type": "double", "description": "Total delivery fee"},
+        {"name": "driverEarning", "type": "double", "description": "Driver's earnings"},
+        {"name": "platformFee", "type": "double", "description": "Platform commission"},
+        {"name": "pickupAddress", "type": "String?", "description": "Pickup location address"},
+        {"name": "pickupLatitude", "type": "double?", "description": "Pickup latitude"},
+        {"name": "pickupLongitude", "type": "double?", "description": "Pickup longitude"},
+        {"name": "deliveryAddress", "type": "String?", "description": "Delivery address"},
+        {"name": "deliveryLatitude", "type": "double?", "description": "Delivery latitude"},
+        {"name": "deliveryLongitude", "type": "double?", "description": "Delivery longitude"},
+        {"name": "distanceKm", "type": "double?", "description": "Distance in km"},
+        {"name": "codAmount", "type": "double?", "description": "Cash on delivery amount"},
+        {"name": "assignedAt", "type": "DateTime?", "description": "Assignment timestamp"},
+        {"name": "pickedUpAt", "type": "DateTime?", "description": "Pickup timestamp"},
+        {"name": "deliveredAt", "type": "DateTime?", "description": "Delivery timestamp"},
+        {"name": "deliveryNotes", "type": "String?", "description": "Delivery notes"},
+        {"name": "failureReason", "type": "String?", "description": "Failure reason if any"},
+        {"name": "createdAt", "type": "DateTime", "description": "Creation timestamp"},
+        {"name": "updatedAt", "type": "DateTime", "description": "Last update timestamp"},
+        {"name": "driver", "type": "DeliveryDriver?", "description": "Driver details object"},
+        {"name": "order", "type": "DeliveryOrder?", "description": "Order details object"}
+      ],
+      "helper_methods": [
+        {"name": "hasDriver", "return": "bool", "description": "Check if driver assigned"},
+        {"name": "isPickedUp", "return": "bool", "description": "Check if picked up"},
+        {"name": "isDelivered", "return": "bool", "description": "Check if delivered"},
+        {"name": "isPending", "return": "bool", "description": "Check if pending"},
+        {"name": "isAssigned", "return": "bool", "description": "Check if assigned"},
+        {"name": "isInTransit", "return": "bool", "description": "Check if in transit"},
+        {"name": "canBeCancelled", "return": "bool", "description": "Check if can be cancelled"}
+      ],
+      "nested_models": {
+        "DeliveryDriver": {
+          "properties": [
+            {"name": "id", "type": "int"},
+            {"name": "name", "type": "String"},
+            {"name": "phone", "type": "String?"},
+            {"name": "profilePicture", "type": "String?"},
+            {"name": "vehicleType", "type": "String?"},
+            {"name": "vehicleNumber", "type": "String?"},
+            {"name": "rating", "type": "double?"}
+          ]
+        },
+        "DeliveryOrder": {
+          "properties": [
+            {"name": "id", "type": "int"},
+            {"name": "orderNumber", "type": "String"},
+            {"name": "itemTitle", "type": "String"},
+            {"name": "itemImage", "type": "String?"},
+            {"name": "buyerName", "type": "String"},
+            {"name": "buyerPhone", "type": "String?"},
+            {"name": "sellerName", "type": "String"},
+            {"name": "sellerPhone", "type": "String?"},
+            {"name": "pickupAddress", "type": "String?"},
+            {"name": "deliveryAddress", "type": "String?"},
+            {"name": "totalAmount", "type": "double?"},
+            {"name": "isDonation", "type": "bool"}
+          ]
+        }
+      }
+    },
+    "charity_model": {
+      "file": "lib/models/charity_model.dart",
+      "classes": [
+        {
+          "name": "Charity",
+          "properties": [
+            {"name": "id", "type": "int", "description": "Unique charity ID"},
+            {"name": "name", "type": "String", "description": "Charity name"},
+            {"name": "email", "type": "String", "description": "Contact email"},
+            {"name": "phone", "type": "String?", "description": "Contact phone"},
+            {"name": "address", "type": "String?", "description": "Physical address"},
+            {"name": "description", "type": "String?", "description": "Charity description"},
+            {"name": "logo", "type": "String?", "description": "Logo URL"},
+            {"name": "isVerified", "type": "bool", "description": "Verification status"},
+            {"name": "totalDonationsReceived", "type": "int", "description": "Total donations count"},
+            {"name": "peopleHelped", "type": "int", "description": "Number of people helped"},
+            {"name": "createdAt", "type": "DateTime?", "description": "Registration date"}
+          ]
+        },
+        {
+          "name": "DonatedItem",
+          "properties": [
+            {"name": "id", "type": "int", "description": "Donation ID"},
+            {"name": "itemId", "type": "int", "description": "Associated item ID"},
+            {"name": "charityId", "type": "int?", "description": "Charity ID"},
+            {"name": "status", "type": "String", "description": "Donation status"},
+            {"name": "itemTitle", "type": "String", "description": "Item title"},
+            {"name": "itemImage", "type": "String?", "description": "Item image URL"},
+            {"name": "donorName", "type": "String", "description": "Donor name"},
+            {"name": "charityName", "type": "String?", "description": "Charity name"},
+            {"name": "donatedAt", "type": "DateTime", "description": "Donation date"},
+            {"name": "acceptedAt", "type": "DateTime?", "description": "Acceptance date"}
+          ],
+          "helper_methods": [
+            {"name": "isPending", "return": "bool"},
+            {"name": "isAccepted", "return": "bool"},
+            {"name": "isRejected", "return": "bool"}
+          ]
+        }
+      ]
+    },
+    "driver_model": {
+      "file": "lib/models/driver_model.dart",
+      "properties": [
+        {"name": "id", "type": "int", "description": "Driver ID"},
+        {"name": "userId", "type": "int", "description": "Associated user ID"},
+        {"name": "name", "type": "String", "description": "Driver name"},
+        {"name": "email", "type": "String", "description": "Email address"},
+        {"name": "phone", "type": "String", "description": "Contact phone"},
+        {"name": "profilePicture", "type": "String?", "description": "Profile image URL"},
+        {"name": "status", "type": "String", "description": "Application status"},
+        {"name": "vehicleType", "type": "String?", "description": "Type of vehicle"},
+        {"name": "vehicleNumber", "type": "String?", "description": "Vehicle registration"},
+        {"name": "licenseNumber", "type": "String?", "description": "License number"},
+        {"name": "licenseImage", "type": "String?", "description": "License image URL"},
+        {"name": "vehicleImage", "type": "String?", "description": "Vehicle image URL"},
+        {"name": "rating", "type": "double?", "description": "Driver rating"},
+        {"name": "totalDeliveries", "type": "int", "description": "Total deliveries completed"},
+        {"name": "totalEarnings", "type": "double", "description": "Total earnings"},
+        {"name": "isAvailable", "type": "bool", "description": "Current availability"},
+        {"name": "createdAt", "type": "DateTime?", "description": "Registration date"},
+        {"name": "updatedAt", "type": "DateTime?", "description": "Last update date"}
+      ],
+      "helper_methods": [
+        {"name": "ratingDisplay", "return": "String", "description": "Formatted rating"},
+        {"name": "earningsDisplay", "return": "String", "description": "Formatted earnings"},
+        {"name": "isPending", "return": "bool", "description": "Check if pending"},
+        {"name": "isApproved", "return": "bool", "description": "Check if approved"},
+        {"name": "isRejected", "return": "bool", "description": "Check if rejected"}
+      ]
+    },
+    "address_model": {
+      "file": "lib/models/address_model.dart",
+      "properties": [
+        {"name": "id", "type": "int", "description": "Address ID"},
+        {"name": "addressLine1", "type": "String", "description": "Primary address line"},
+        {"name": "addressLine2", "type": "String?", "description": "Secondary address line"},
+        {"name": "city", "type": "String", "description": "City name"},
+        {"name": "state", "type": "String?", "description": "State/region"},
+        {"name": "country", "type": "String", "description": "Country"},
+        {"name": "postalCode", "type": "String?", "description": "Postal code"},
+        {"name": "phoneNumber", "type": "String?", "description": "Contact phone"},
+        {"name": "latitude", "type": "double?", "description": "Location latitude"},
+        {"name": "longitude", "type": "double?", "description": "Location longitude"},
+        {"name": "isDefault", "type": "bool", "description": "Default address flag"},
+        {"name": "createdAt", "type": "DateTime", "description": "Creation timestamp"},
+        {"name": "updatedAt", "type": "DateTime", "description": "Update timestamp"}
+      ],
+      "helper_methods": [
+        {"name": "fullAddress", "return": "String", "description": "Complete address string"},
+        {"name": "shortAddress", "return": "String", "description": "Short address format"}
+      ]
+    },
+    "notification_model": {
+      "file": "lib/models/notification_model.dart",
+      "properties": [
+        {"name": "id", "type": "int", "description": "Notification ID"},
+        {"name": "title", "type": "String", "description": "Notification title"},
+        {"name": "message", "type": "String?", "description": "Notification message"},
+        {"name": "type", "type": "String?", "description": "Notification type"},
+        {"name": "isRead", "type": "bool", "description": "Read status"},
+        {"name": "createdAt", "type": "DateTime", "description": "Creation timestamp"},
+        {"name": "data", "type": "Map<String, dynamic>?", "description": "Additional data payload"}
+      ]
+    }
+  },
+
+  "enums": {
+    "category": {
+      "file": "lib/models/category_enum.dart",
+      "values": [
+        {"value": "tops", "displayName": "Tops", "description": "Shirts, blouses, t-shirts, etc."},
+        {"value": "bottoms", "displayName": "Bottoms", "description": "Pants, jeans, skirts, shorts"},
+        {"value": "dresses", "displayName": "Dresses", "description": "All types of dresses"},
+        {"value": "outerwear", "displayName": "Outerwear", "description": "Jackets, coats, blazers"},
+        {"value": "shoes", "displayName": "Shoes", "description": "Footwear of all types"},
+        {"value": "accessories", "displayName": "Accessories", "description": "Bags, jewelry, scarves, etc."},
+        {"value": "other", "displayName": "Other", "description": "Items not in other categories"}
+      ]
+    },
+    "size": {
+      "file": "lib/models/size_enum.dart",
+      "values": [
+        "XS", "S", "M", "L", "XL", "XXL", "3XL",
+        "US 6", "US 7", "US 8", "US 9", "US 10", "US 11", "US 12",
+        "EU 36", "EU 37", "EU 38", "EU 39", "EU 40", "EU 41", "EU 42",
+        "UK 5", "UK 6", "UK 7", "UK 8", "UK 9", "One Size"
+      ]
+    },
+    "condition": {
+      "file": "lib/models/condition_enum.dart",
+      "values": [
+        {"value": "new", "displayName": "New", "description": "Brand new with tags"},
+        {"value": "like_new", "displayName": "Like New", "description": "Worn once or twice, excellent condition"},
+        {"value": "good", "displayName": "Good", "description": "Gently used with minor signs of wear"},
+        {"value": "fair", "displayName": "Fair", "description": "Noticeable wear but still usable"},
+        {"value": "poor", "displayName": "Poor", "description": "Significant wear, for donation/recycling"}
+      ]
+    },
+    "gender": {
+      "file": "lib/models/gender_enum.dart",
+      "values": [
+        {"value": "men", "displayName": "Men"},
+        {"value": "women", "displayName": "Women"},
+        {"value": "unisex", "displayName": "Unisex"},
+        {"value": "kids", "displayName": "Kids"}
+      ]
+    },
+    "item_status": {
+      "file": "lib/models/item_status_enum.dart",
+      "values": [
+        {"value": "available", "displayName": "Available"},
+        {"value": "sold", "displayName": "Sold"},
+        {"value": "reserved", "displayName": "Reserved"},
+        {"value": "deleted", "displayName": "Deleted"}
+      ]
+    },
+    "order_status": {
+      "file": "lib/models/order_status_enum.dart",
+      "values": [
+        {"value": "pending", "displayName": "Pending", "description": "Waiting for seller confirmation", "color": "orange"},
+        {"value": "confirmed", "displayName": "Confirmed", "description": "Seller confirmed, awaiting driver", "color": "blue"},
+        {"value": "in_delivery", "displayName": "In Delivery", "description": "Driver is delivering", "color": "purple"},
+        {"value": "delivered", "displayName": "Delivered", "description": "Package delivered", "color": "green"},
+        {"value": "completed", "displayName": "Completed", "description": "Order completed successfully", "color": "teal"},
+        {"value": "cancelled", "displayName": "Cancelled", "description": "Order was cancelled", "color": "red"}
+      ]
+    },
+    "driver_status": {
+      "file": "lib/models/driver_status_enum.dart",
+      "values": [
+        {"value": "pending", "displayName": "Pending", "description": "Application under review", "color": "orange"},
+        {"value": "approved", "displayName": "Approved", "description": "Ready to accept deliveries", "color": "green"},
+        {"value": "rejected", "displayName": "Rejected", "description": "Application rejected", "color": "red"},
+        {"value": "suspended", "displayName": "Suspended", "description": "Account suspended", "color": "grey"},
+        {"value": "active", "displayName": "Active", "description": "Currently delivering", "color": "blue"}
+      ]
+    },
+    "delivery_status": {
+      "file": "lib/models/delivery_status_enum.dart",
+      "values": [
+        {"value": "pending", "displayName": "Pending"},
+        {"value": "assigned", "displayName": "Assigned"},
+        {"value": "in_transit", "displayName": "In Transit"},
+        {"value": "delivered", "displayName": "Delivered"},
+        {"value": "cancelled", "displayName": "Cancelled"}
+      ]
+    }
+  },
+
+  "api_endpoints": {
+    "base_url": "http://127.0.0.1:8000/api",
+    "authentication": [
+      {"method": "POST", "endpoint": "/auth/login", "description": "User login"},
+      {"method": "POST", "endpoint": "/auth/register-code", "description": "Request registration code"},
+      {"method": "POST", "endpoint": "/auth/register", "description": "Complete registration"},
+      {"method": "POST", "endpoint": "/auth/resend-code", "description": "Resend verification code"},
+      {"method": "POST", "endpoint": "/auth/refresh-token", "description": "Refresh access token"},
+      {"method": "POST", "endpoint": "/auth/validate", "description": "Validate token"},
+      {"method": "POST", "endpoint": "/auth/logout", "description": "Logout from current device"},
+      {"method": "POST", "endpoint": "/auth/logout-all", "description": "Logout from all devices"},
+      {"method": "GET", "endpoint": "/auth/me", "description": "Get current user profile"},
+      {"method": "PUT", "endpoint": "/auth/profile", "description": "Update profile"},
+      {"method": "PUT", "endpoint": "/auth/password", "description": "Change password"},
+      {"method": "DELETE", "endpoint": "/user/delete-account", "description": "Delete account"}
+    ],
+    "items": [
+      {"method": "GET", "endpoint": "/items", "description": "Browse items with filters"},
+      {"method": "GET", "endpoint": "/items/{id}", "description": "Get item details"},
+      {"method": "POST", "endpoint": "/items", "description": "Create new item listing"},
+      {"method": "PUT", "endpoint": "/items/{id}", "description": "Update item"},
+      {"method": "DELETE", "endpoint": "/items/{id}", "description": "Delete item"},
+      {"method": "GET", "endpoint": "/items/my-listings", "description": "Get user's listed items"},
+      {"method": "POST", "endpoint": "/items/{id}/toggle-status", "description": "Toggle item availability"}
+    ],
+    "orders": [
+      {"method": "GET", "endpoint": "/orders", "description": "Get user orders"},
+      {"method": "GET", "endpoint": "/orders/{id}", "description": "Get order details"},
+      {"method": "POST", "endpoint": "/orders", "description": "Create new order"},
+      {"method": "PUT", "endpoint": "/orders/{id}", "description": "Update order"},
+      {"method": "POST", "endpoint": "/orders/{id}/cancel", "description": "Cancel order"}
+    ],
+    "addresses": [
+      {"method": "GET", "endpoint": "/addresses", "description": "Get user addresses"},
+      {"method": "POST", "endpoint": "/addresses", "description": "Add new address"},
+      {"method": "PUT", "endpoint": "/addresses/{id}", "description": "Update address"},
+      {"method": "DELETE", "endpoint": "/addresses/{id}", "description": "Delete address"},
+      {"method": "PUT", "endpoint": "/addresses/{id}/default", "description": "Set as default"}
+    ],
+    "favorites": [
+      {"method": "GET", "endpoint": "/favorites", "description": "Get favorite items"},
+      {"method": "POST", "endpoint": "/favorites/{itemId}", "description": "Add to favorites"},
+      {"method": "DELETE", "endpoint": "/favorites/{itemId}", "description": "Remove from favorites"}
+    ],
+    "drivers": [
+      {"method": "POST", "endpoint": "/drivers/apply", "description": "Apply as driver"},
+      {"method": "GET", "endpoint": "/drivers/dashboard", "description": "Get driver dashboard data"},
+      {"method": "GET", "endpoint": "/drivers/available-deliveries", "description": "Get available deliveries"},
+      {"method": "POST", "endpoint": "/drivers/deliveries/{id}/accept", "description": "Accept delivery"},
+      {"method": "PUT", "endpoint": "/drivers/deliveries/{id}/update-status", "description": "Update delivery status"},
+      {"method": "PUT", "endpoint": "/drivers/deliveries/{id}/update-location", "description": "Update driver location"},
+      {"method": "GET", "endpoint": "/drivers/deliveries", "description": "Get driver delivery history"},
+      {"method": "GET", "endpoint": "/drivers/earnings", "description": "Get driver earnings"},
+      {"method": "PUT", "endpoint": "/drivers/availability", "description": "Update availability status"}
+    ],
+    "charities": [
+      {"method": "GET", "endpoint": "/charities/dashboard", "description": "Get charity dashboard"},
+      {"method": "GET", "endpoint": "/charities/donations", "description": "Get received donations"},
+      {"method": "GET", "endpoint": "/charities/pending-donations", "description": "Get pending donations"},
+      {"method": "POST", "endpoint": "/charities/donations/{id}/accept", "description": "Accept donation"},
+      {"method": "POST", "endpoint": "/charities/donations/{id}/reject", "description": "Reject donation"},
+      {"method": "GET", "endpoint": "/charities/claimed", "description": "Get claimed items"},
+      {"method": "GET", "endpoint": "/charities/impact-stats", "description": "Get impact statistics"}
+    ],
+    "admin": [
+      {"method": "GET", "endpoint": "/admin/drivers/applications", "description": "Get driver applications"},
+      {"method": "GET", "endpoint": "/admin/drivers/applications/{id}", "description": "Get application details"},
+      {"method": "PUT", "endpoint": "/admin/drivers/applications/{id}/approve", "description": "Approve application"},
+      {"method": "PUT", "endpoint": "/admin/drivers/applications/{id}/reject", "description": "Reject application"}
+    ],
+    "notifications": [
+      {"method": "GET", "endpoint": "/notifications", "description": "Get user notifications"},
+      {"method": "PUT", "endpoint": "/notifications/{id}/read", "description": "Mark as read"},
+      {"method": "PUT", "endpoint": "/notifications/read-all", "description": "Mark all as read"}
+    ]
+  },
+
+  "state_management_providers": {
+    "auth_provider": {
+      "file": "lib/providers/auth_provider.dart",
+      "responsibilities": [
+        "User authentication state",
+        "Login/logout functionality",
+        "User profile data",
+        "Session management",
+        "Token coordination with storage"
+      ]
+    },
+    "items_provider": {
+      "file": "lib/providers/items_provider.dart",
+      "responsibilities": [
+        "Marketplace items list",
+        "Item search and filtering",
+        "Item detail loading",
+        "User's item listings",
+        "CRUD operations for items"
+      ]
+    },
+    "cart_provider": {
+      "file": "lib/providers/cart_provider.dart",
+      "responsibilities": [
+        "Shopping cart state",
+        "Add/remove items",
+        "Quantity management",
+        "Cart total calculation",
+        "Local persistence"
+      ]
+    },
+    "favorites_provider": {
+      "file": "lib/providers/favorites_provider.dart",
+      "responsibilities": [
+        "Favorites list management",
+        "Add/remove favorites",
+        "Sync with backend"
+      ]
+    },
+    "orders_provider": {
+      "file": "lib/providers/orders_provider.dart",
+      "responsibilities": [
+        "User orders list",
+        "Order details",
+        "Order status updates",
+        "Order creation"
+      ]
+    },
+    "addresses_provider": {
+      "file": "lib/providers/addresses_provider.dart",
+      "responsibilities": [
+        "User addresses list",
+        "Add/edit/delete addresses",
+        "Default address management"
+      ]
+    },
+    "driver_provider": {
+      "file": "lib/providers/driver_provider.dart",
+      "responsibilities": [
+        "Driver application state",
+        "Driver profile data",
+        "Dashboard statistics",
+        "Availability status"
+      ]
+    },
+    "delivery_provider": {
+      "file": "lib/providers/delivery_provider.dart",
+      "responsibilities": [
+        "Available deliveries",
+        "Active delivery state",
+        "Delivery history",
+        "Location tracking"
+      ]
+    },
+    "charity_provider": {
+      "file": "lib/providers/charity_provider.dart",
+      "responsibilities": [
+        "Donation management",
+        "Charity dashboard data",
+        "Impact statistics",
+        "Pending donations"
+      ]
+    },
+    "notifications_provider": {
+      "file": "lib/providers/notifications_provider.dart",
+      "responsibilities": [
+        "Notifications list",
+        "Read/unread status",
+        "Push notification handling"
+      ]
+    }
+  },
+
+  "services": {
+    "api_service": {
+      "file": "lib/services/api_service.dart",
+      "description": "Core HTTP client with interceptors",
+      "features": [
+        "Dio-based HTTP client",
+        "Automatic token injection",
+        "Token refresh on 401",
+        "Request/response logging",
+        "Error handling",
+        "Timeout management"
+      ]
+    },
+    "auth_service": {
+      "file": "lib/services/auth_service.dart",
+      "description": "Authentication API calls"
+    },
+    "items_service": {
+      "file": "lib/services/items_service.dart",
+      "description": "Items and marketplace API"
+    },
+    "orders_service": {
+      "file": "lib/services/orders_service.dart",
+      "description": "Orders management API"
+    },
+    "addresses_service": {
+      "file": "lib/services/addresses_service.dart",
+      "description": "Address management API"
+    },
+    "favorites_service": {
+      "file": "lib/services/favorites_service.dart",
+      "description": "Favorites API"
+    },
+    "driver_service": {
+      "file": "lib/services/driver_service.dart",
+      "description": "Driver-related APIs"
+    },
+    "delivery_service": {
+      "file": "lib/services/delivery_service.dart",
+      "description": "Delivery management APIs"
+    },
+    "charity_service": {
+      "file": "lib/services/charity_service.dart",
+      "description": "Charity and donation APIs"
+    },
+    "admin_driver_service": {
+      "file": "lib/services/admin_driver_service.dart",
+      "description": "Admin driver management APIs"
+    },
+    "notifications_service": {
+      "file": "lib/services/notifications_service.dart",
+      "description": "Notifications API and FCM integration"
+    },
+    "storage_service": {
+      "file": "lib/services/storage_service.dart",
+      "description": "Secure token and data storage",
+      "features": [
+        "Flutter Secure Storage wrapper",
+        "Access token storage",
+        "Refresh token storage",
+        "User data caching"
+      ]
+    },
+    "token_service": {
+      "file": "lib/services/token_service.dart",
+      "description": "Token refresh logic"
+    },
+    "location_service": {
+      "file": "lib/services/location_service.dart",
+      "description": "GPS and location services",
+      "features": [
+        "Current location detection",
+        "Permission handling",
+        "Location updates",
+        "Distance calculations"
+      ]
+    },
+    "image_upload_service": {
+      "file": "lib/services/image_upload_service.dart",
+      "description": "Image upload to Firebase Storage",
+      "features": [
+        "Multipart upload",
+        "Progress tracking",
+        "Compression",
+        "URL retrieval"
+      ]
+    },
+    "firebase_service": {
+      "file": "lib/services/firebase_service.dart",
+      "description": "Firebase initialization and FCM setup"
+    }
+  },
+
+  "widgets": {
+    "common_widgets": [
+      {
+        "name": "CustomButton",
+        "file": "lib/widgets/common/custom_button.dart",
+        "description": "Reusable button component with variants",
+        "variants": ["Elevated", "Outlined", "Text"]
+      },
+      {
+        "name": "CustomTextField",
+        "file": "lib/widgets/common/custom_text_field.dart",
+        "description": "Styled text input with validation support"
+      },
+      {
+        "name": "LoadingOverlay",
+        "file": "lib/widgets/common/loading_overlay.dart",
+        "description": "Full-screen loading indicator"
+      },
+      {
+        "name": "ErrorDialog",
+        "file": "lib/widgets/common/error_dialog.dart",
+        "description": "Reusable error alert dialog"
+      }
+    ],
+    "item_widgets": [
+      {
+        "name": "ItemCard",
+        "file": "lib/widgets/items/item_card.dart",
+        "description": "Card display for marketplace items",
+        "features": ["Image", "Title", "Price", "Favorite button", "Distance indicator"]
+      },
+      {
+        "name": "ImageCarousel",
+        "file": "lib/widgets/items/image_carousel.dart",
+        "description": "Swipeable image viewer with zoom"
+      },
+      {
+        "name": "ConditionBadge",
+        "file": "lib/widgets/items/condition_badge.dart",
+        "description": "Visual indicator for item condition"
+      },
+      {
+        "name": "CategoryChip",
+        "file": "lib/widgets/items/category_chip.dart",
+        "description": "Selectable category filter chip"
+      },
+      {
+        "name": "EmptyState",
+        "file": "lib/widgets/items/empty_state.dart",
+        "description": "Empty list placeholder with illustration"
+      }
+    ],
+    "cart_widgets": [
+      {
+        "name": "CartItemCard",
+        "file": "lib/widgets/cart/cart_item_card.dart",
+        "description": "Shopping cart item with quantity controls"
+      },
+      {
+        "name": "CartSummary",
+        "file": "lib/widgets/cart/cart_summary.dart",
+        "description": "Cart totals and checkout button"
+      }
+    ],
+    "delivery_widgets": [
+      {
+        "name": "DeliveryStatusStepper",
+        "file": "lib/widgets/delivery/delivery_status_stepper.dart",
+        "description": "Visual progress indicator for delivery milestones"
+      },
+      {
+        "name": "DeliveryMapWidget",
+        "file": "lib/widgets/delivery/delivery_map_widget.dart",
+        "description": "Google Maps integration showing route"
+      }
+    ],
+    "driver_widgets": [
+      {
+        "name": "DeliveryCard",
+        "file": "lib/widgets/driver/delivery_card.dart",
+        "description": "Compact delivery assignment card"
+      },
+      {
+        "name": "DriverStatsCard",
+        "file": "lib/widgets/driver/driver_stats_card.dart",
+        "description": "Driver statistics display"
+      },
+      {
+        "name": "EarningsCard",
+        "file": "lib/widgets/driver/earnings_card.dart",
+        "description": "Earnings summary card"
+      }
+    ],
+    "auth_widgets": [
+      {
+        "name": "PasswordStrengthIndicator",
+        "file": "lib/widgets/auth/password_strength_indicator.dart",
+        "description": "Visual password strength meter"
+      }
+    ]
+  },
+
+  "navigation": {
+    "router": "GoRouter v12.1.1",
+    "navigation_structure": {
+      "bottom_navigation": {
+        "tabs": [
+          {"index": 0, "route": "/", "label": "Home", "icon": "home"},
+          {"index": 1, "route": "/selling", "label": "Selling", "icon": "sell"},
+          {"index": 2, "route": "/orders", "label": "Orders", "icon": "shopping_bag"},
+          {"index": 3, "route": "/profile", "label": "Profile", "icon": "person"}
+        ]
+      },
+      "protected_routes": "All routes except /login, /register, /otp-verification, /item/:id require authentication",
+      "role_based_redirects": {
+        "charity": "/charity/home",
+        "verified_driver": "/driver/dashboard",
+        "regular_user": "/"
+      }
+    },
+    "route_protection": {
+      "public": ["/login", "/register", "/otp-verification", "/item"],
+      "authenticated": "All other routes",
+      "redirect_logic": "Unauthenticated users redirected to /login"
+    }
+  },
+
+  "theme_and_design": {
+    "design_system": "Material Design 3",
+    "primary_color": "#2A9D8F (Teal)",
+    "secondary_color": "#57B894 (Green)",
+    "accent_color": "#E9C46A (Yellow/Gold)",
+    "error_color": "#E76F51 (Burnt Orange)",
+    "background_color": "#F5F5F5 (Light Grey)",
+    "text_colors": {
+      "primary": "#264653 (Dark Blue-Grey)",
+      "secondary": "#6B7280 (Medium Grey)",
+      "hint": "#BDBDBD (Light Grey)",
+      "white": "#FFFFFF"
+    },
+    "typography": {
+      "headings": "Poppins",
+      "body": "Inter",
+      "font_weights": ["Regular (400)", "Medium (500)", "SemiBold (600)", "Bold (700)"]
+    },
+    "spacing": {
+      "small": "8.0",
+      "medium": "16.0",
+      "large": "24.0"
+    },
+    "border_radius": {
+      "small": "8.0",
+      "medium": "12.0",
+      "large": "16.0"
+    },
+    "shadows": "Subtle elevation with alpha transparency",
+    "cards": "White background with rounded corners and subtle shadow",
+    "buttons": {
+      "elevated": "Primary color background, white text, rounded corners",
+      "outlined": "Primary color border, transparent background",
+      "text": "Primary color text, no background"
+    },
+    "input_fields": {
+      "fill": "White background",
+      "border": "Light grey (#E0E0E0)",
+      "focused_border": "Primary color, 2px width",
+      "border_radius": "12px"
+    }
+  },
+
+  "technologies_and_dependencies": {
+    "core_framework": {
+      "flutter": "Cross-platform UI framework",
+      "dart": "Programming language (SDK >=3.0.0)"
+    },
+    "state_management": {
+      "provider": "^6.1.1 - State management solution"
+    },
+    "navigation": {
+      "go_router": "^12.1.1 - Declarative routing"
+    },
+    "networking": {
+      "dio": "^5.4.0 - HTTP client with interceptors",
+      "http": "^1.2.0 - Basic HTTP package",
+      "retrofit": "^4.0.3 - Type-safe HTTP client generator"
+    },
+    "storage": {
+      "flutter_secure_storage": "^9.0.0 - Encrypted key-value storage",
+      "shared_preferences": "^2.2.2 - Simple key-value storage"
+    },
+    "firebase": {
+      "firebase_core": "^2.24.2 - Firebase initialization",
+      "firebase_storage": "^11.5.6 - Cloud storage for images",
+      "firebase_messaging": "^14.7.9 - Push notifications"
+    },
+    "ui_components": {
+      "google_fonts": "^6.3.2 - Custom typography",
+      "flutter_svg": "^2.0.9 - SVG rendering",
+      "cached_network_image": "^3.3.0 - Image caching",
+      "shimmer": "^3.0.0 - Loading animations",
+      "lottie": "^2.7.0 - Lottie animations",
+      "flutter_spinkit": "^5.2.0 - Loading indicators",
+      "pin_code_fields": "^8.0.1 - OTP input",
+      "smooth_page_indicator": "^1.1.0 - Page indicators",
+      "flutter_rating_bar": "^4.0.1 - Rating display",
+      "badges": "^3.1.2 - Notification badges",
+      "pull_to_refresh": "^2.0.0 - Pull-to-refresh gesture",
+      "fl_chart": "^0.65.0 - Charts and graphs"
+    },
+    "forms_and_validation": {
+      "flutter_form_builder": "^10.1.0 - Form handling",
+      "form_builder_validators": "^11.2.0 - Validation rules"
+    },
+    "maps_and_location": {
+      "google_maps_flutter": "^2.5.0 - Interactive maps",
+      "geolocator": "^10.1.0 - Location tracking",
+      "geocoding": "^2.1.1 - Address geocoding"
+    },
+    "image_handling": {
+      "image_picker": "^1.0.4 - Image selection",
+      "image_cropper": "^8.0.2 - Image editing",
+      "photo_view": "^0.14.0 - Image zoom/view"
+    },
+    "utilities": {
+      "intl": "^0.20.0 - Internationalization",
+      "timeago": "^3.6.0 - Relative time formatting",
+      "url_launcher": "^6.2.2 - External URL handling",
+      "share_plus": "^7.2.1 - Content sharing",
+      "permission_handler": "^11.1.0 - Runtime permissions",
+      "connectivity_plus": "^5.0.2 - Network connectivity",
+      "package_info_plus": "9.0.0 - App information",
+      "device_info_plus": "^9.1.1 - Device information",
+      "logger": "^2.0.2 - Logging utility"
+    },
+    "datetime": {
+      "flutter_datetime_picker_plus": "^2.1.0 - Date/time picker",
+      "table_calendar": "^3.0.9 - Calendar widget"
+    }
+  },
+
+  "security_features": {
+    "authentication": {
+      "jwt_tokens": "Access and refresh token system",
+      "token_refresh": "Automatic token refresh on expiry",
+      "secure_storage": "Encrypted token storage using Flutter Secure Storage",
+      "otp_verification": "Email verification with 6-digit OTP",
+      "password_requirements": "Minimum 8 characters with uppercase, lowercase, number, and special character"
+    },
+    "authorization": {
+      "role_based_access": "Different interfaces for different user roles",
+      "route_protection": "Protected routes requiring authentication",
+      "permission_checks": "Backend-enforced permission validation"
+    },
+    "data_protection": {
+      "https": "All API communication over HTTPS in production",
+      "encrypted_storage": "Sensitive data encrypted at rest",
+      "session_management": "Automatic logout on token expiry"
+    }
+  },
+
+  "user_journeys": {
+    "buyer_journey": [
+      {"step": 1, "action": "User registers/logs in", "screen": "LoginScreen/RegisterScreen"},
+      {"step": 2, "action": "Browse marketplace items", "screen": "HomeScreen"},
+      {"step": 3, "action": "View item details", "screen": "ItemDetailScreen"},
+      {"step": 4, "action": "Add item to cart or favorites", "screen": "ItemDetailScreen"},
+      {"step": 5, "action": "Proceed to checkout", "screen": "CartScreen → CheckoutScreen"},
+      {"step": 6, "action": "Select delivery address and payment method", "screen": "CheckoutScreen"},
+      {"step": 7, "action": "Place order", "screen": "CheckoutScreen"},
+      {"step": 8, "action": "Track order status", "screen": "OrdersScreen → OrderDetailScreen"},
+      {"step": 9, "action": "Track delivery in real-time", "screen": "OrderTrackingScreen"},
+      {"step": 10, "action": "Receive item and order completes", "screen": "OrderDetailScreen"}
+    ],
+    "seller_journey": [
+      {"step": 1, "action": "User logs in", "screen": "LoginScreen"},
+      {"step": 2, "action": "Navigate to selling section", "screen": "SellingScreen"},
+      {"step": 3, "action": "Create new item listing", "screen": "CreateItemScreen"},
+      {"step": 4, "action": "Upload images and add details", "screen": "CreateItemScreen"},
+      {"step": 5, "action": "Set price or mark as donation", "screen": "CreateItemScreen"},
+      {"step": 6, "action": "Publish item", "screen": "CreateItemScreen"},
+      {"step": 7, "action": "Receive order notification", "screen": "NotificationsScreen"},
+      {"step": 8, "action": "Confirm order", "screen": "OrderDetailScreen"},
+      {"step": 9, "action": "Hand over to driver", "screen": "OrderDetailScreen"},
+      {"step": 10, "action": "Order delivered and completes", "screen": "OrderDetailScreen"}
+    ],
+    "donor_journey": [
+      {"step": 1, "action": "User logs in", "screen": "LoginScreen"},
+      {"step": 2, "action": "Create item listing", "screen": "CreateItemScreen"},
+      {"step": 3, "action": "Mark item as donation", "screen": "CreateItemScreen"},
+      {"step": 4, "action": "Select charity to donate to", "screen": "CreateItemScreen"},
+      {"step": 5, "action": "Publish donation", "screen": "CreateItemScreen"},
+      {"step": 6, "action": "Charity reviews donation", "screen": "Charity views donation"},
+      {"step": 7, "action": "Charity accepts donation", "screen": "CharityPendingDonationsScreen"},
+      {"step": 8, "action": "Arrange pickup/delivery", "screen": "CharityClaimedScreen"},
+      {"step": 9, "action": "Donation completed", "screen": "CharityImpactStatsScreen"}
+    ],
+    "driver_journey": [
+      {"step": 1, "action": "User applies to become driver", "screen": "DriverApplicationScreen"},
+      {"step": 2, "action": "Admin reviews application", "screen": "AdminDriverApplicationDetailScreen"},
+      {"step": 3, "action": "Application approved", "screen": "Admin sends approval"},
+      {"step": 4, "action": "Driver logs in and sees dashboard", "screen": "DriverDashboardScreen"},
+      {"step": 5, "action": "View available deliveries", "screen": "AvailableDeliveriesScreen"},
+      {"step": 6, "action": "Accept delivery assignment", "screen": "AvailableDeliveriesScreen"},
+      {"step": 7, "action": "Navigate to pickup location", "screen": "ActiveDeliveryScreen"},
+      {"step": 8, "action": "Pick up item and update status", "screen": "ActiveDeliveryScreen"},
+      {"step": 9, "action": "Navigate to delivery address", "screen": "ActiveDeliveryScreen"},
+      {"step": 10, "action": "Deliver item and mark complete", "screen": "ActiveDeliveryScreen"},
+      {"step": 11, "action": "View earnings and history", "screen": "DriverEarningsScreen/DeliveryHistoryScreen"}
+    ],
+    "charity_journey": [
+      {"step": 1, "action": "Charity logs in", "screen": "LoginScreen"},
+      {"step": 2, "action": "Redirected to charity home", "screen": "CharityHomeScreen"},
+      {"step": 3, "action": "View dashboard statistics", "screen": "CharityDashboardScreen"},
+      {"step": 4, "action": "Review pending donations", "screen": "PendingDonationsScreen"},
+      {"step": 5, "action": "Accept or reject donations", "screen": "PendingDonationsScreen"},
+      {"step": 6, "action": "View claimed items", "screen": "CharityClaimedScreen"},
+      {"step": 7, "action": "Track impact statistics", "screen": "ImpactStatsScreen"},
+      {"step": 8, "action": "Manage donation history", "screen": "CharityDonationsScreen"}
+    ]
+  },
+
+  "app_configuration": {
+    "api_config": {
+      "base_url": "http://127.0.0.1:8000/api",
+      "timeout": "30 seconds",
+      "api_version": "v1"
+    },
+    "storage_keys": {
+      "access_token": "access_token",
+      "refresh_token": "refresh_token",
+      "user_data": "user_data",
+      "device_name": "device_name"
+    },
+    "token_expiry": {
+      "access_token": "15 minutes",
+      "refresh_token": "7 days"
+    },
+    "validation_rules": {
+      "otp_length": 6,
+      "otp_expiry": "15 minutes",
+      "max_login_attempts": 5,
+      "account_lock_duration": "30 minutes",
+      "min_password_length": 8,
+      "password_pattern": "Must contain uppercase, lowercase, number, and special character"
+    }
+  },
+
+  "environment_configurations": {
+    "development": {
+      "base_url": "http://127.0.0.1:8000/api",
+      "description": "Local development server"
+    },
+    "android_emulator": {
+      "base_url": "http://10.0.2.2:8000/api",
+      "description": "Android emulator accessing localhost"
+    },
+    "production": {
+      "base_url": "https://api.rewear.com/api",
+      "description": "Production API server"
+    }
+  },
+
+  "asset_structure": {
+    "images": "assets/images/ - Static image assets",
+    "icons": "assets/icons/ - Custom icon files",
+    "animations": "assets/animations/ - Lottie animation JSON files",
+    "fonts": "assets/fonts/ - Custom font files (Inter family)"
+  },
+
+  "key_features_summary": {
+    "sustainability": "Promotes circular fashion economy by extending clothing lifecycle",
+    "multi_stakeholder": "Connects buyers, sellers, charities, and drivers in one platform",
+    "real_time_tracking": "GPS-based delivery tracking for transparency",
+    "charity_integration": "Direct donation channel to verified charitable organizations",
+    "flexible_work": "Opportunity for drivers to earn through delivery services",
+    "secure": "JWT-based authentication with encrypted storage",
+    "intuitive_ui": "Material Design 3 with custom theme and smooth navigation",
+    "notifications": "Real-time updates via Firebase Cloud Messaging",
+    "comprehensive_admin": "Admin panel for platform oversight and driver verification"
+  },
+
+  "development_notes": {
+    "minimum_sdk": "Flutter 3.0.0+, Dart 3.0.0+",
+    "supported_platforms": "iOS, Android",
+    "orientation": "Portrait only",
+    "authentication": "Required for most features",
+    "network": "Internet connection required",
+    "permissions": [
+      "Camera (for photo uploads)",
+      "Storage (for file access)",
+      "Location (for delivery tracking and distance calculation)",
+      "Notifications (for push notifications)"
+    ]
+  }
+}
